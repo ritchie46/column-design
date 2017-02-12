@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import './App.css';
+import "./column_nen_en.js"
 
 class App extends Component {
     constructor() {
@@ -19,6 +20,7 @@ class App extends Component {
           <Input label="Axial force: " unit="kN" name="Ned" function={this.setHandler}/>
           <Input label="Bending moment top: " unit="kNm" name="M1" function={this.setHandler}/>
           <Input label="Bending moment bottom: " unit="kNm" name="M2" function={this.setHandler}/>
+          <Input label="Buckling length :" unit="m" name="l0" function={this.setHandler}/>
           <Input label="Reinforcement percentage: " unit="%" name="rho" function={this.setHandler}/>
           <Input label="Unity check: " value="1" name="UC" function={this.setHandler}/>
           <Button label="Go!" function={executeColumn}/>
@@ -63,7 +65,6 @@ class Button extends React.Component {
 
 function executeColumn() {
 
-    console.log(std.convergence, "hier")
 }
 
 
