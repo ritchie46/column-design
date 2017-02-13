@@ -61,7 +61,7 @@
 	
 	var _App2 = _interopRequireDefault(_App);
 	
-	__webpack_require__(/*! ./index.css */ 183);
+	__webpack_require__(/*! ./index.css */ 186);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -22046,7 +22046,7 @@
 	
 	__webpack_require__(/*! ./App.css */ 179);
 	
-	__webpack_require__(/*! ./column_nen_en.js */ 187);
+	__webpack_require__(/*! ./column_nen_en.js */ 183);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -22527,61 +22527,108 @@
 
 /***/ },
 /* 183 */
-/*!***********************!*\
-  !*** ./src/index.css ***!
-  \***********************/
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(/*! !./../~/css-loader!./index.css */ 184);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(/*! ./../~/style-loader/addStyles.js */ 182)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../node_modules/css-loader/index.js!./index.css", function() {
-				var newContent = require("!!./../node_modules/css-loader/index.js!./index.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 184 */
-/*!**************************************!*\
-  !*** ./~/css-loader!./src/index.css ***!
-  \**************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(/*! ./../~/css-loader/lib/css-base.js */ 181)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "body {\n  margin: 0;\n  padding: 0;\n  font-family: sans-serif;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 185 */
-/*!************************!*\
-  !*** ./src/mnkappa.js ***!
-  \************************/
+/*!******************************!*\
+  !*** ./src/column_nen_en.js ***!
+  \******************************/
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
-	__webpack_require__(/*! ./vanilla_mkap.min */ 186);
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
+	var _mnkappa = __webpack_require__(/*! ./mnkappa.js */ 184);
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var fyd = 435;
+	var eps_yd = fyd / 2e5;
+	
+	function detM0e(m1, m2) {
+	    /*
+	     * Determine M0e conform NEN-EN 1992-1-1 art. 5.8.8.2(2).
+	     *
+	     * @param m1: (float) Bending moment at top or bottom of column.
+	     * @param m2: (float) Bending moment at top or bottom of column.
+	     * */
+	    var m02 = Math.max(m1, m2);
+	    var m01 = Math.min(m1, m2);
+	    var m0e = 0.6 * m02 + 0.4 * m01;
+	    return m0e > 0.4 * m02 ? m0e : 0.4 * m0e;
+	}
+	
+	var ColumnNENEN = function () {
+	    function ColumnNENEN(m1, m2, ned, fck, rho, l0) {
+	        _classCallCheck(this, ColumnNENEN);
+	
+	        this.m1 = m1;
+	        this.m2 = m2;
+	        this.ned = ned;
+	        this.fck = fck;
+	        this.rho = rho;
+	        this.l0 = l0;
+	        this.m0e = detM0e(m1, m2);
+	
+	        this.i = 0; // needs to be determined before det params
+	    }
+	
+	    _createClass(ColumnNENEN, [{
+	        key: "det_params",
+	        value: function det_params(area) {
+	            // Kr
+	            var n = this.ned / (area * this.fck / 1.5);
+	            this.as = area * this.rho;
+	            this.omega = this.as * fyd / (area * this.fck / 1.5);
+	            var n_u = 1 + this.omega;
+	            var n_bal = 0.4;
+	            var kr = (n_u - n) / (n_u - n_bal) < 1 ? (n_u - n) / (n_u - n_bal) : 1;
+	
+	            // K_phi
+	            var lambda = this.l0 / this.i;
+	            var beta = 0.35 + this.fck / 200 - lambda / 150;
+	            var phi_eff = 2.5;
+	            var k_phi = 1 + beta * phi_eff;
+	
+	            var d = 0.8 * Math.sqrt(area); // only with squares.
+	            var _1_div_r0 = eps_yd / (0.45 * d);
+	            var _1_div_r = kr * k_phi * _1_div_r0;
+	            var e2 = _1_div_r * Math.pow(this.l0, 2) / Math.pow(Math.PI, 2);
+	            var M2 = this.ned * e2;
+	            return { "M2": M2 };
+	        }
+	    }, {
+	        key: "solve",
+	        value: function solve() {
+	            var b = 100;
+	
+	            var as = this.rho * Math.pow(b, 2) / 2;
+	            var cs = (0, _mnkappa.rectangle)(b, b);
+	            var fc = (0, _mnkappa.diagramConcreteBiLinearULS)(this.fck / 1.5);
+	            var m = (0, _mnkappa.m_n_kappa)(cs, fc, _mnkappa.diagramNoConcreteTension, [_mnkappa.B500, _mnkappa.B500], [as, as], [0.2 * b, 0.8 * b], -Math.abs(this.ned));
+	            m.solver(true, 3.5, false);
+	            m.det_m_kappa();
+	            console.log(m.moment);
+	        }
+	    }]);
+	
+	    return ColumnNENEN;
+	}();
+	
+	var test = new ColumnNENEN(100, 100, 100, 100, 100, 100);
+	test.solve();
+	console.log("ja");
+
+/***/ },
+/* 184 */
+/*!************************!*\
+  !*** ./src/mnkappa.js ***!
+  \************************/
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
 	function rectangle(b, h) {
 	    /*
 	    * Create a cross section required for the M-N-Kappa solver.
@@ -22615,11 +22662,11 @@
 	
 	    var m = new mkap.MomentKappa(cs, fc, fct);
 	    m.normal_force = ned;
+	    m.mp = 0;
 	    m.rebar_As = as;
-	    m.m0 = Array.apply(null, Array(as.length).map(Number.prototype.valueOf, 0));
-	    m.prestress = m.d_strain = m.d_stress = m.m0;
+	    m.prestress = m.m0 = m.d_stress = m.d_strain = Array.apply(null, Array(as.length)).map(Number.prototype.valueOf, 0);
 	    m.rebar_z = z;
-	    m.rebar_diam = fs;
+	    m.rebar_diagram = fs;
 	    return m;
 	}
 	
@@ -22627,282 +22674,62 @@
 	    return new mkap.StressStrain([0, 1.75, 3.5], [0, stress, stress]);
 	}
 	
+	var diagramNoConcreteTension = new mkap.StressStrain([0, 0], [0, 0]);
+	
 	var B500 = new mkap.StressStrain([0, 2.175, 25], [0, 435, 435]);
+	
+	exports.rectangle = rectangle;
+	exports.m_n_kappa = m_n_kappa;
+	exports.diagramConcreteBiLinearULS = diagramConcreteBiLinearULS;
+	exports.B500 = B500;
+	exports.diagramNoConcreteTension = diagramNoConcreteTension;
 
 /***/ },
+/* 185 */,
 /* 186 */
-/*!*********************************!*\
-  !*** ./src/vanilla_mkap.min.js ***!
-  \*********************************/
-/***/ function(module, exports) {
+/*!***********************!*\
+  !*** ./src/index.css ***!
+  \***********************/
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
-	var std = function () {
-	  function n(n, a, t, e) {
-	    var r = Math.abs(n - a);return r <= e || (Math.abs(n) < Math.abs(a) ? r <= Math.abs(a) * t : r <= Math.abs(n) * t);
-	  }function a(n) {
-	    return !isNaN(parseFloat(n));
-	  }function t(n, a, t, e, r) {
-	    var u = t - n,
-	        i = e - a,
-	        o = r - n,
-	        f = o / u,
-	        s = f * i;return a + s;
-	  }function e(n, a, t) {
-	    t = "undefined" != typeof t ? t : 3;var e = Math.abs(a) / Math.abs(n);return (e - 1) / t + 1;
-	  }function r(n, a, t, e) {
-	    t = "undefined" != typeof t ? t : 1.001, e = "undefined" != typeof e ? e : .999;var r = Math.abs(a) / Math.abs(n);return e <= r && r <= t;
-	  }function u(n, a) {
-	    var t = [],
-	        e = [];return n.forEach(function (n) {
-	      n < a && t.push(n) || n > a && e.push(n);
-	    }), { low: n.indexOf(Math.max.apply(null, t)), high: n.indexOf(Math.min.apply(null, e)) };
-	  }function i(n, a, t) {
-	    if ("undefined" == typeof t && (t = Math.max(Math.round(a - n) + 1, 1)), t < 2) return 1 === t ? [n] : [];var e,
-	        r = Array(t);for (t--, e = t; e >= 0; e--) {
-	      r[e] = (e * a + (t - e) * n) / t;
-	    }return r;
-	  }return { interpolate: t, convergence: e, convergence_conditions: r, is_number: a, nearest_index: u, is_close: n, linspace: i };
-	}();
-	"use strict";var vector = function () {
-	  function t(t, i) {
-	    this.x = t, this.y = i;
-	  }function i(i, n, e) {
-	    var a = n.x - i.x,
-	        s = n.y - i.y;if (null == e.y) var h = e.x - i.x,
-	        o = h / a,
-	        r = s * o;else null == e.x && (r = e.y - i.y, o = r / s, h = a * o);return new t(i.x + h, i.y + r);
-	  }function n(i, n, e) {
-	    if ("x" == e) {
-	      if (i.x < n.x) return i;if (n.x < i.x) return n;console.log("points x values are identical");
-	    } else if ("y" == e) return i.y < n.y ? i : n.y < i.y ? n : new t(null, i.y);console.log("cannot verify given axis");
-	  }function e(t, i, e) {
-	    return n(t.negative(), i.negative(), e).negative();
-	  }var a = !1;return t.prototype.modulus = function () {
-	    return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
-	  }, t.prototype.negative = function () {
-	    return new t(-this.x, -this.y);
-	  }, t.prototype.rotate_origin = function (i) {
-	    var n = this.modulus(),
-	        e = this.angle_orgin_x_axis(),
-	        a = new t(0, 0);return a.displace_polar(i + e, n), a;
-	  }, t.prototype.displace_polar = function (t, i) {
-	    this.x += Math.cos(t) * i, this.y += Math.sin(t) * i;
-	  }, t.prototype.angle_orgin_x_axis = function () {
-	    if (0 == this.y) {
-	      if (this.x > 0) var t = 0;else t = Math.PI;
-	    } else 0 == this.x ? t = this.y > 0 ? .5 * Math.PI : 1.5 * Math.PI : this.x > 0 && this.y > 0 ? t = Math.atan(Math.abs(this.y / this.x)) : this.x < 0 && 0 < this.y ? t = .5 * Math.PI + Math.atan(Math.abs(this.x / this.y)) : this.x < 0 && this.y < 0 ? t = Math.PI + Math.atan(Math.abs(this.y / this.x)) : this.x > 0 && 0 > this.y ? t = 1.5 * Math.PI + Math.atan(Math.abs(this.x / this.y)) : a && console.log("Can not determine the angle of the point with the axes origin");return t;
-	  }, { interpolate_points: i, Point: t, highest_point: e, lowest_point: n };
-	}();
-	"use strict";var crsn = function () {
-	  function t(t) {
-	    this.point_list = t, this.n_value = 1e3, this.subtractor = null, this.instantiate();
-	  }function i(i) {
-	    for (var r = 100, o = 2 * Math.PI / r, s = [], n = new vector.Point(0, -i), e = new vector.Point(i, i), a = 1; a <= r; a++) {
-	      var h = o * a,
-	          p = n.rotate_origin(h);p = new vector.Point(p.x + e.x, p.y + e.y), s.push(p);
-	    }t.call(this, s);
-	  }function r(t, i, r) {
-	    this.point_list = i, this.paired_xvals = [], this.width_array = [], this.top = t, this.n_value = r, this.y_val = this.det_height_array(), this.return_x_on_axis();
-	  }function o(i, o) {
-	    for (var s = 100, n = 2 * Math.PI / s, e = [], a = [], h = new vector.Point(0, -i), p = new vector.Point(0, -o), _ = new vector.Point(i, i), l = new vector.Point(i, i), u = 1; u <= s + 1; u++) {
-	      var v = n * u,
-	          y = h.rotate_origin(v);y = new vector.Point(y.x + l.x, y.y + l.y);var c = p.rotate_origin(v);c = new vector.Point(c.x + _.x, c.y + _.y), e.push(y), a.push(c);
-	    }t.call(this, e), this.subtractor = new r(2 * i, a, this.n_value), this.subtractor.merge_width(this);
-	  }return t.prototype.activate_subtractor = function () {
-	    this.subtractor.merge_width(this);
-	  }, t.prototype.instantiate = function () {
-	    this.top = this.highest_point("y").y, this.bottom = this.lowest_point("y").y, this.y_val = this.det_height_array(), this.paired_xvals = [], this.width_array = [], this.return_x_on_axis();
-	  }, t.prototype.det_height_array = function () {
-	    return std.linspace(0, this.top, this.n_value);
-	  }, t.prototype.lowest_point = function (t) {
-	    for (var i = this.point_list[0], r = 1; r < this.point_list.length; r++) {
-	      i = vector.lowest_point(i, this.point_list[r], t);
-	    }return i;
-	  }, t.prototype.highest_point = function (t) {
-	    for (var i = this.point_list[0], r = 1; r < this.point_list.length; r++) {
-	      i = vector.highest_point(i, this.point_list[r], t);
-	    }return i;
-	  }, t.prototype.return_x_on_axis = function () {
-	    for (var t = 0; t < this.y_val.length; t++) {
-	      for (var i = this.y_val[t] - .5 * this.y_val[1], r = [], o = 0; o < this.point_list.length - 1; o++) {
-	        if (this.point_list[o].y >= i == !(this.point_list[o + 1].y >= i)) {
-	          var s = vector.interpolate_points(this.point_list[o], this.point_list[o + 1], new vector.Point(null, i));r.push(s.x);
-	        }
-	      }r.sort(function (t, i) {
-	        return t - i;
-	      });for (var n = [], e = 0; e < r.length; e++) {
-	        (e + 1) % 2 == 0 && n.push([r[e - 1], r[e]]);
-	      }this.paired_xvals.push(n);var a = 0;for (o = 0; o < n.length; o++) {
-	        a += n[o][1] - n[o][0];
-	      }this.width_array.push(Math.abs(a));
-	    }
-	  }, t.prototype.area = function () {
-	    for (var t = this.y_val[1], i = 0, r = 0; r < this.y_val.length; r++) {
-	      i += t * this.width_array[r];
-	    }return i = Math.round(i), Math.abs(i);
-	  }, t.prototype.zero_line = function () {
-	    var t = (this.top - this.bottom) / this.n_value,
-	        i = 0;for (var r in this.width_array) {
-	      i += t * this.width_array[r] * this.y_val[r];
-	    }return i / this.area();
-	  }, i.prototype = Object.create(t.prototype), i.prototype.constructor = i, r.prototype.merge_width = function (t) {
-	    for (var i in t.width_array) {
-	      t.width_array[i] -= this.width_array[i];var r = [];if (this.width_array[i] > 0) {
-	        for (var o in t.paired_xvals[i]) {
-	          r.push(t.paired_xvals[i][o][0]), r.push(t.paired_xvals[i][o][1]);
-	        }for (o in this.paired_xvals[i]) {
-	          r.push(this.paired_xvals[i][o][0]), r.push(this.paired_xvals[i][o][1]);
-	        }r.sort(function (t, i) {
-	          return t - i;
-	        });for (var s = [], n = 0; n < r.length; n++) {
-	          (n + 1) % 2 == 0 && s.push([r[n - 1], r[n]]);
-	        }t.paired_xvals[i] = s;
-	      }
-	    }
-	  }, r.prototype.return_x_on_axis = t.prototype.return_x_on_axis, r.prototype.det_height_array = t.prototype.det_height_array, o.prototype = Object.create(t.prototype), o.prototype.constructor = o, { PolyGon: t, Circle: i, Tube: o, Subtractor: r };
-	}();
-	"use strict";var DEBUG = !1,
-	    mkap = function () {
-	  function s(s, t, i) {
-	    this.cross_section = s, this.compressive_diagram = t, this.tensile_diagram = i, this.force_tensile = 0, this.force_compression = 0, this.normal_force = 0, this.rebar_As = [], this.rebar_z = [], this.rebar_diagram = [], this.m0 = [], this.rebar_strain0_plt = [], this.rebar_diam = null, this.prestress = [], this.d_stress = [], this.d_strain = [], this.mp = 0, this.original_rebar_diagrams = [], this.iterations = 110, this.solution = null, this.rebar_force = [], this.rebar_strain = [], this.stress = [], this.moment = null, this.kappa = null, this.strain_top = null, this.strain_btm = null, this.zero_line = null, this.xu = null, this.reduce_rebar = !1;
-	  }function t(s, t) {
-	    this.strain = s, this.stress = t;
-	  }return s.prototype.det_force_distribution = function (s, t, i) {
-	    this.force_compression = 0, this.force_tensile = 0, this.stress = [], this.rebar_strain = [], this.strain_top = s, this.strain_btm = t, i = "undefined" != typeof i && i, this.reduce_rebar = i, this.normal_force < 0 ? this.force_tensile += Math.abs(this.normal_force) : this.force_compression += Math.abs(this.normal_force);for (var r = this.cross_section.y_val[1], e = this.cross_section.y_val[0], o = this.cross_section.y_val[this.cross_section.y_val.length - 1], n = 0; n < this.cross_section.y_val.length; n++) {
-	      var a = std.interpolate(e, t, o, s, this.cross_section.y_val[n]);a < 0 ? (c = -this.compressive_diagram.det_stress(Math.abs(a)), this.force_compression -= c * this.cross_section.width_array[n] * r) : (c = this.tensile_diagram.det_stress(a), this.force_tensile += c * this.cross_section.width_array[n] * r), this.stress.push(c);
-	    }for (this.rebar_force = [], n = 0; n < this.rebar_As.length; n++) {
-	      var h = std.interpolate(e, t, o, s, this.rebar_z[n]);this.rebar_strain.push(h + this.d_strain[n]);var _,
-	          c = this.rebar_diagram[n].det_stress(Math.abs(h)),
-	          l = this.rebar_As[n] * c;h < 0 && 0 == this.prestress[n] ? (this.force_compression += l, this.rebar_force.push(-l), i && (_ = this.compressive_diagram.det_stress(Math.abs(h)), this.force_compression -= this.rebar_As[n] * _)) : (this.force_tensile += l, this.rebar_force.push(l), i && (_ = this.tensile_diagram.det_stress(h), this.force_tensile -= this.rebar_As[n] * _));
-	    }
-	  }, s.prototype.set_div = function (s) {
-	    s = Math.abs(s), s < .15 ? (this.div = 1, this.iterations = 500) : (this.div = 2.5, this.iterations = 110);
-	  }, s.prototype.iterator_top_constant = function (s, t, i) {
-	    for (var r = 0;;) {
-	      if (std.convergence_conditions(this.force_compression, this.force_tensile)) {
-	        this.solution = !0, i && window.DEBUG && console.log("convergence after %s iterations".replace("%s", r));break;
-	      }for (var e = Math.min.apply(null, this.rebar_z), o = 0; o < this.rebar_As.length; o++) {
-	        if (this.rebar_z[o] == e) var n = this.rebar_strain[o],
-	            a = o;
-	      }if (0 === this.force_tensile && n <= 0) s = std.interpolate(this.cross_section.top, t, e, this.rebar_diagram[a].strain[1], this.cross_section.bottom);else if (isNaN(this.force_tensile)) s = std.interpolate(this.cross_section.top, t, e, this.rebar_diagram[a].strain[1], this.cross_section.bottom);else {
-	        this.set_div(s);var h = std.convergence(this.force_tensile, this.force_compression, this.div);s *= h;
-	      }if (this.det_force_distribution(t, s), r > this.iterations) {
-	        i && window.DEBUG && console.log("no convergence found after %s iterations".replace("%s", r));break;
-	      }r += 1;
-	    }
-	  }, s.prototype.iterator_btm_constant = function (s, t, i) {
-	    for (var r = 0;;) {
-	      if (std.convergence_conditions(this.force_compression, this.force_tensile)) {
-	        this.solution = !0, i && window.DEBUG && console.log("convergence after %s iterations".replace("%s", r));break;
-	      }var e = std.convergence(this.force_compression, this.force_tensile, this.div);if (t *= e, this.det_force_distribution(t, s), r > this.iterations) {
-	        i && window.DEBUG && console.log("no convergence found after %s iterations".replace("%s", r));break;
-	      }r += 1;
-	    }
-	  }, s.prototype.iterator_complete_pressure = function (s) {
-	    var t = s;if (this.det_force_distribution(s, t), this.force_tensile > this.force_compression) return 1;for (var i = 0;;) {
-	      if (std.convergence_conditions(this.force_compression, this.force_tensile)) {
-	        this.solution = !0, print && window.DEBUG && console.log("convergence after %s iterations".replace("%s", i));break;
-	      }this.set_div(t);var r = std.convergence(this.force_compression, this.force_tensile, this.div);if (t *= r, this.det_force_distribution(s, t), i > this.iterations) {
-	        print && window.DEBUG && console.log("no convergence found after %s iterations".replace("%s", i));break;
-	      }i += 1;
-	    }
-	  }, s.prototype.solver = function (s, t, i) {
-	    s = "undefined" == typeof s || s, i = "undefined" == typeof i || i, this.solution = !1;var r = t,
-	        e = -t;this.det_force_distribution(e, r), s ? this.iterator_top_constant(r, e, i) : this.iterator_btm_constant(r, e, i), this.validity() || 0 == this.normal_force || this.iterator_complete_pressure(e);
-	  }, s.prototype.det_m_kappa = function () {
-	    this.kappa = (-this.strain_top + this.strain_btm) / (this.cross_section.top - this.cross_section.bottom), this.moment = this.mp;for (var s = .5 * this.cross_section.y_val[1], t = this.cross_section.y_val[1], i = 0; i < this.cross_section.y_val.length; i++) {
-	      var r = this.cross_section.y_val[i] + s,
-	          e = this.stress[i] * this.cross_section.width_array[i] * t;this.moment += r * e;
-	    }for (this.moment -= this.normal_force * this.cross_section.zero_line(), i = 0; i < this.rebar_As.length; i++) {
-	      if (this.moment += this.rebar_force[i] * this.rebar_z[i], this.reduce_rebar) if (this.rebar_force[i] > 0) var o = this.tensile_diagram.det_stress(this.rebar_strain[i]);else o = -this.compressive_diagram.det_stress(Math.abs(this.rebar_strain[i]));
-	    }this.zero_line = std.interpolate(this.strain_btm, this.cross_section.bottom, this.strain_top, this.cross_section.top, 0), this.xu = this.cross_section.top - this.zero_line;
-	  }, s.prototype.validity = function () {
-	    var s = !0;if (std.is_number(this.moment) && std.is_number(this.kappa) && this.solution && this.strain_top >= -this.compressive_diagram.strain[this.compressive_diagram.strain.length - 1] && this.strain_top < 0) {
-	      for (var t in this.rebar_strain) {
-	        this.rebar_strain[t] > Math.max.apply(null, this.rebar_diagram[t].strain) && (s = !1);
-	      }if (std.is_close(this.strain_btm, 0, .01, .03) && this.xu >= this.cross_section.top - this.cross_section.bottom) return !1;
-	    } else s = !1;return s;
-	  }, t.prototype.det_stress = function (s) {
-	    for (var t = 0; t < this.strain.length; t++) {
-	      if (s > this.strain[this.strain.length - 1]) return 0;if (this.strain[t] == s) return this.stress[t];if (this.strain[t] > s) return std.interpolate(this.strain[t - 1], this.stress[t - 1], this.strain[t], this.stress[t], s);
-	    }
-	  }, t.prototype.det_strain = function (s) {
-	    for (var t = 0; t < this.stress.length; t++) {
-	      if (s > this.stress[this.stress.length - 1]) return 0;if (this.stress[t] == s) return this.strain[t];if (this.stress[t] > s) return std.interpolate(this.stress[t - 1], this.strain[t - 1], this.stress[t], this.strain[t], s);
-	    }
-	  }, { MomentKappa: s, StressStrain: t };
-	}();
-	"use strict";function add_row(s) {
-	  var t = s.closest(".panel-body").find(".custom_row").last(),
-	      e = t.clone();e.removeClass("hidden"), t.after(e);
-	}function remove_row(s) {
-	  s.closest(".custom_row").remove();
-	}function trigger_normal_force() {
-	  var s = 1e3 * parseFloat($("#normal_force").val());isNaN(s) && (s = 0), session.mkap.normal_force = s;
-	}function update_rebar_results(s) {
-	  $slct = $(".results_table_rebar_diagram"), $slct.length > 1 && $slct.last().remove();var t = $slct.first().clone().removeClass("hidden");$("#result_table_div_rbr").append(t);for (var e = 0; e < session.moment_rebar[s].length; e++) {
-	    $slct = $(".results_table_row_rbr"), $slct.last().find(".show_section_btn").removeClass("hidden"), $slct.last().find(".significant_moment").html(Math.round(session.moment_rebar[s][e] / 1e4) / 100), $slct.last().find(".signifcant_row_no").last().html(e + 1), $slct.last().find(".significant_kappa").last().html(Math.round(1e3 * session.kappa_rebar[s][e]) / 1e3), $slct.last().find(".significant_stress").last().html(Math.round(100 * session.sign_stress_rbr[s][e]) / 100), $slct.last().find(".significant_strain").last().html(Math.round(1e3 * session.sign_strain_rbr[s][e]) / 1e3), $slct.first().clone().insertAfter($slct.last());
-	  }
-	}var DEBUG = !1,
-	    $slct = $("#comp_curve_body");$slct.on("change", "input", function () {
-	  $("#compression_material").val("custom"), trigger_comp_strain();
-	}), $slct.on("click", ".remove_row", function () {
-	  $("#compression_material").val("custom"), $(this).closest(".custom_row").remove(), trigger_comp_strain();
-	});var calculate_mkappa = function calculate_mkappa() {
-	  if (trigger_rebar_strain(), trigger_normal_force(), trigger_rebar_input(), trigger_comp_strain(), trigger_tens_strain(), session.mkap.mp = 0, session.compute_prestress && 1 == session.pre_prestress()) return 1;$(".mkappa_svg").find("svg").remove();var s = plt.add_svg(".mkappa_svg", "curvature", "bending moment  [*10^6]");$(".result_output").addClass("hidden");var t = $("#calculation_type").val();if ("search moment" == t) {
-	    if (n = -parseFloat($("#moment_input").val()) * Math.pow(10, 6), session.apply_m0(), session.compute_prestress) var e = session.compute_moment(n, !1);else e = session.compute_moment(n, !0);0 == e ? plt.cross_section_view("#modal-svg", session.mkap) : window.alert("No solution found.");
-	  } else if ("discrete points" == t) $("#moment_kappa_diagram_output").removeClass("hidden"), e = session.compute_n_points(50), n = e.moment, a = e.kappa, n.push(-session.mkap.mp), a.push(0), plt.moment_kappa(s, a, n.map(function (s) {
-	    return s / 1e6;
-	  }), session);else {
-	    $("#moment_kappa_diagram_output").removeClass("hidden"), $("#significant_results_output").removeClass("hidden"), e = session.calculate_significant_points();var n = e.moment,
-	        a = e.kappa;for (n.unshift(-session.mkap.mp), a.unshift(0), plt.moment_kappa(s, a, n.map(function (s) {
-	      return s / 1e6;
-	    }), session), $slct = $(".results_table_compression_diagram"), $slct.length > 1 && $slct.last().remove(), i = $slct.first().clone().removeClass("hidden"), $("#result_table_div_comp").append(i), o = 0; o < session.moment_compression.length; o++) {
-	      $slct = $(".results_table_row_comp"), $slct.last().find(".show_section_btn").removeClass("hidden"), $slct.last().find(".significant_moment").html(Math.round(session.moment_compression[o] / 1e4) / 100), $slct.last().find(".signifcant_row_no").last().html(o + 1), $slct.last().find(".significant_kappa").last().html(Math.round(1e3 * session.kappa_compression[o]) / 1e3), $slct.last().find(".significant_stress").last().html(Math.round(100 * session.sign_stress_comp[o]) / 100), $slct.last().find(".significant_strain").last().html(Math.round(1e3 * session.sign_strain_comp[o]) / 1e3), $slct.first().clone().insertAfter($slct.last());
-	    }$slct = $(".results_table_tensile_diagram"), $slct.length > 1 && $slct.last().remove();var i = $slct.first().clone().removeClass("hidden");$("#result_table_div_tens").append(i);for (var o = 0; o < session.moment_tensile.length; o++) {
-	      $slct = $(".results_table_row_tens"), $slct.last().find(".show_section_btn").removeClass("hidden"), $slct.last().find(".significant_moment").html(Math.round(session.moment_tensile[o] / 1e4) / 100), $slct.last().find(".signifcant_row_no").last().html(o + 1), $slct.last().find(".significant_kappa").last().html(Math.round(1e3 * session.kappa_tensile[o]) / 1e3), $slct.last().find(".significant_stress").last().html(Math.round(100 * session.sign_stress_tens[o]) / 100), $slct.last().find(".significant_strain").last().html(Math.round(1e3 * session.sign_strain_tens[o]) / 1e3), $slct.first().clone().insertAfter($slct.last());
-	    }update_rebar_results(0);
-	  }
-	};console.log("version_10-02");
-	;
+	// load the styles
+	var content = __webpack_require__(/*! !./../~/css-loader!./index.css */ 187);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(/*! ./../~/style-loader/addStyles.js */ 182)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../node_modules/css-loader/index.js!./index.css", function() {
+				var newContent = require("!!./../node_modules/css-loader/index.js!./index.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
 
 /***/ },
 /* 187 */
-/*!******************************!*\
-  !*** ./src/column_nen_en.js ***!
-  \******************************/
+/*!**************************************!*\
+  !*** ./~/css-loader!./src/index.css ***!
+  \**************************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	exports = module.exports = __webpack_require__(/*! ./../~/css-loader/lib/css-base.js */ 181)();
+	// imports
 	
-	__webpack_require__(/*! ./mnkappa */ 185);
 	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	// module
+	exports.push([module.id, "body {\n  margin: 0;\n  padding: 0;\n  font-family: sans-serif;\n}\n", ""]);
 	
-	function detM0e(m1, m2) {
-	    /*
-	     * Determine M0e conform NEN-EN 1992-1-1 art. 5.8.8.2(2).
-	     *
-	     * @param m1: (float) Bending moment at top or bottom of column.
-	     * @param m2: (float) Bending moment at top or bottom of column.
-	     * */
-	    var m02 = Math.max(m1, m2);
-	    var m01 = Math.min(m1, m2);
-	    var m0e = 0.6 * m02 + 0.4 * m01;
-	    return m0e > 0.4 * m02 ? m0e : 0.4 * m0e;
-	
-	    var ColumnNENEN = function ColumnNENEN(m1, m2) {
-	        _classCallCheck(this, ColumnNENEN);
-	
-	        this.m1 = m1;
-	        this.m2 = m2;
-	        this.m0e = detM0e(m1, m2);
-	    };
-	}
-	
-	console.log(new ColumnNENEN(20, 30));
+	// exports
+
 
 /***/ }
 /******/ ]);

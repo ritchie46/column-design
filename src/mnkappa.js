@@ -1,5 +1,4 @@
 "use strict";
-import "./vanilla_mkap.min"
 
 function rectangle(b, h) {
     /*
@@ -34,11 +33,11 @@ function m_n_kappa(cs, fc, fct, fs, as, z, ned) {
 
     let m = new mkap.MomentKappa(cs, fc, fct);
     m.normal_force = ned;
+    m.mp = 0;
     m.rebar_As = as;
-    m.m0 = Array.apply(null, Array(as.length).map(Number.prototype.valueOf, 0));
-    m.prestress = m.d_strain = m.d_stress = m.m0;
+    m.prestress = m.m0 = m.d_stress = m.d_strain = Array.apply(null, Array(as.length)).map(Number.prototype.valueOf, 0);
     m.rebar_z = z;
-    m.rebar_diam = fs;
+    m.rebar_diagram = fs;
     return m
 }
 
@@ -47,5 +46,8 @@ function diagramConcreteBiLinearULS(stress) {
     return new mkap.StressStrain([0, 1.75, 3.5], [0, stress, stress])
 }
 
-let B500 = new mkap.StressStrain([0, 2.175, 25], [0, 435, 435]);
+const diagramNoConcreteTension = new mkap.StressStrain([0, 0], [0, 0]);
 
+const B500 = new mkap.StressStrain([0, 2.175, 25], [0, 435, 435]);
+
+export {rectangle, m_n_kappa, diagramConcreteBiLinearULS, B500, diagramNoConcreteTension}
