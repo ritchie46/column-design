@@ -22592,56 +22592,104 @@
 	            var _1_div_r0 = eps_yd / (0.45 * d);
 	            var _1_div_r = kr * k_phi * _1_div_r0;
 	            var e2 = _1_div_r * Math.pow(this.l0, 2) / Math.pow(Math.PI, 2);
-	            var M2 = this.ned * e2;
+	            var M2 = -this.ned * e2;
 	            return { "M2": M2 };
 	        }
 	    }, {
 	        key: "solve",
 	        value: function solve() {
-	            var fc = (0, _mnkappa.diagramConcreteBiLinearULS)(this.fck / 1.5);
+	            var fcd = this.fck / 1.5;
+	            var fc = (0, _mnkappa.diagramConcreteBiLinearULS)(fcd);
 	            var b = 1000;
 	            var c = 0;
+	            var area = void 0;
+	            var m = void 0;
+	
+	            // Iterate the minimum required dimension for the axial force.
 	            while (true) {
-	                this.i = b / 3.46;
-	                var as = this.rho * Math.pow(b, 2) / 2;
-	                var cs = (0, _mnkappa.rectangle)(b, b);
-	
-	                var m = (0, _mnkappa.m_n_kappa)(cs, fc, _mnkappa.diagramNoConcreteTension, _mnkappa.B500, [as, as], [0.2 * b, 0.8 * b], this.ned);
-	                (0, _mnkappa.calcHookup)(0.05, m);
-	                m.det_m_kappa();
-	
-	                var M2 = this.det_params(Math.pow(b, 2)).M2;
-	                var M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
-	
-	                if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
-	                    console.log("convergence", m.validity());
+	                area = Math.pow(b, 2);
+	                var nrd = this.axialForceResistance(area);
+	                if (std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
+	                    var as = this.rho * area / 2;
+	                    var cs = (0, _mnkappa.rectangle)(b, b);
+	                    m = (0, _mnkappa.m_n_kappa)(cs, fc, _mnkappa.diagramNoConcreteTension, _mnkappa.B500, [as, as], [0.2 * b, 0.8 * b], this.ned);
+	                    (0, _mnkappa.calcHookup)(0.05, m);
+	                    m.det_m_kappa();
+	                    console.log("convergence", m.moment / 1e6, "count", c);
 	                    break;
 	                }
-	
-	                var factor = std.convergence(m.moment, M0EdM2);
-	                console.log(factor, "factor");
-	                b *= factor;
-	
-	                console.log(M0EdM2, m.moment, m.validity(), b);
-	
-	                if (!isFinite(b)) {
-	                    console.log("break");
-	                    break;
-	                }
+	                b *= std.convergence(nrd, -this.ned);
 	                c++;
 	
-	                if (c > 250) {
-	                    console.log("max iter");
+	                if (c > 200) {
 	                    break;
 	                }
 	            }
+	
+	            // Validate if the the minimum required cross section for the axial force is able to bear the total moment.
+	            this.i = b / 3.46;
+	            var M2 = this.det_params(area).M2;
+	            var M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
+	            if (m.moment > M0EdM2) {
+	                // The cross section is sufficient.
+	                console.log("Minimal axial force is sufficient");
+	            } else {
+	                c = 0;
+	
+	                while (true) {
+	                    this.i = b / 3.46;
+	                    var _area = Math.pow(b, 2);
+	                    var _as = this.rho * _area / 2;
+	                    var _cs = (0, _mnkappa.rectangle)(b, b);
+	
+	                    var _m = (0, _mnkappa.m_n_kappa)(_cs, fc, _mnkappa.diagramNoConcreteTension, _mnkappa.B500, [_as, _as], [0.2 * b, 0.8 * b], this.ned);
+	                    (0, _mnkappa.calcHookup)(0.05, _m);
+	                    _m.det_m_kappa();
+	
+	                    var _M = this.det_params(_area).M2;
+	                    var _M0EdM = Math.max(this.m0ed + _M, this.m2, this.m1 + 0.5 * _M);
+	
+	                    var factor = std.convergence(_m.moment, _M0EdM, 4);
+	                    console.log("factor: ", factor);
+	                    b *= factor;
+	
+	                    // if (this.axialForceResistance(area) < -this.ned) {
+	                    //     console.log(std.convergence(this.axialForceResistance(area), -this.ned), this.axialForceResistance(area)/1e3);
+	                    //     console.log("minimal axial force dimension");
+	                    //     break
+	                    // }
+	
+	                    if (std.convergence_conditions(_M0EdM, _m.moment, 1.01, 0.99) && _m.validity()) {
+	                        console.log("convergence", _m.validity());
+	                        break;
+	                    }
+	
+	                    console.log(_M0EdM, _m.moment, _m.validity(), b);
+	
+	                    if (!isFinite(b)) {
+	                        console.log("break");
+	                        break;
+	                    }
+	                    c++;
+	
+	                    if (c > 250) {
+	                        console.log("max iter");
+	                        break;
+	                    }
+	                }
+	            }
+	        }
+	    }, {
+	        key: "axialForceResistance",
+	        value: function axialForceResistance(area) {
+	            return area * this.fck / 1.5 + area * this.rho * _mnkappa.B500.det_stress(1.75);
 	        }
 	    }]);
 	
 	    return ColumnNENEN;
 	}();
 	
-	var test = new ColumnNENEN(75e6, 50e6, -100e3, 13.3, 0.02, 10e3);
+	var test = new ColumnNENEN(756, 50e6, -2000e3, 13.3, 0.03, 4e3);
 	test.solve();
 
 /***/ },
