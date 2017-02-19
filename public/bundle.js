@@ -61,7 +61,7 @@
 	
 	var _App2 = _interopRequireDefault(_App);
 	
-	__webpack_require__(/*! ./index.css */ 186);
+	__webpack_require__(/*! ./index.css */ 185);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -22566,7 +22566,7 @@
 	        this.fck = fck;
 	        this.rho = rho;
 	        this.l0 = l0;
-	        this.m0e = detM0e(m1, m2);
+	        this.m0ed = detM0e(m1, m2);
 	
 	        this.i = 0; // needs to be determined before det params
 	    }
@@ -22598,24 +22598,51 @@
 	    }, {
 	        key: "solve",
 	        value: function solve() {
-	            var b = 100;
-	
-	            var as = this.rho * Math.pow(b, 2) / 2;
-	            var cs = (0, _mnkappa.rectangle)(b, b);
 	            var fc = (0, _mnkappa.diagramConcreteBiLinearULS)(this.fck / 1.5);
-	            var m = (0, _mnkappa.m_n_kappa)(cs, fc, _mnkappa.diagramNoConcreteTension, [_mnkappa.B500, _mnkappa.B500], [as, as], [0.2 * b, 0.8 * b], -Math.abs(this.ned));
-	            m.solver(true, 3.5, false);
-	            m.det_m_kappa();
-	            console.log(m.moment);
+	            var b = 1000;
+	            var c = 0;
+	            while (true) {
+	                this.i = b / 3.46;
+	                var as = this.rho * Math.pow(b, 2) / 2;
+	                var cs = (0, _mnkappa.rectangle)(b, b);
+	
+	                var m = (0, _mnkappa.m_n_kappa)(cs, fc, _mnkappa.diagramNoConcreteTension, _mnkappa.B500, [as, as], [0.2 * b, 0.8 * b], this.ned);
+	                (0, _mnkappa.calcHookup)(0.05, m);
+	                m.det_m_kappa();
+	
+	                var M2 = this.det_params(Math.pow(b, 2)).M2;
+	                var M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
+	
+	                if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
+	                    console.log("convergence", m.validity());
+	                    break;
+	                }
+	
+	                var factor = std.convergence(m.moment, M0EdM2);
+	                console.log(factor, "factor");
+	                b *= factor;
+	
+	                console.log(M0EdM2, m.moment, m.validity(), b);
+	
+	                if (!isFinite(b)) {
+	                    console.log("break");
+	                    break;
+	                }
+	                c++;
+	
+	                if (c > 250) {
+	                    console.log("max iter");
+	                    break;
+	                }
+	            }
 	        }
 	    }]);
 	
 	    return ColumnNENEN;
 	}();
 	
-	var test = new ColumnNENEN(100, 100, 100, 100, 100, 100);
+	var test = new ColumnNENEN(75e6, 50e6, -100e3, 13.3, 0.02, 10e3);
 	test.solve();
-	console.log("ja");
 
 /***/ },
 /* 184 */
@@ -22630,7 +22657,7 @@
 	    value: true
 	});
 	function rectangle(b, h) {
-	    /*
+	    /**
 	    * Create a cross section required for the M-N-Kappa solver.
 	    *
 	    * @param a: (float) Width of the cross section
@@ -22646,7 +22673,7 @@
 	}
 	
 	function m_n_kappa(cs, fc, fct, fs, as, z, ned) {
-	    /*
+	    /**
 	    * Prepare a m_n_kappa instance.
 	    *
 	    * @param cs: (Polygon)
@@ -22654,19 +22681,16 @@
 	    * @param fct: (StressStrain) Concrete tensile stress strain diagram.
 	    * @param fs: (StressStrain) Reinforcement stress strain diagram.
 	    * @param as: (Array) Array with area values of the reinforcement.
-	    * @param z: (Array) Distance of the reinforcement from the top of the cross section.
+	    * @param z: (Array) Distance of the reinforcement from the bottom of the cross section.
 	    * @param ned: (float) Axial force value.
 	    *
 	    * @returns moment kappa instance
 	    * */
 	
 	    var m = new mkap.MomentKappa(cs, fc, fct);
+	    m.instantiate_standard_reinforcement(as, z, fs);
 	    m.normal_force = ned;
-	    m.mp = 0;
-	    m.rebar_As = as;
-	    m.prestress = m.m0 = m.d_stress = m.d_strain = Array.apply(null, Array(as.length)).map(Number.prototype.valueOf, 0);
-	    m.rebar_z = z;
-	    m.rebar_diagram = fs;
+	
 	    return m;
 	}
 	
@@ -22675,18 +22699,18 @@
 	}
 	
 	var diagramNoConcreteTension = new mkap.StressStrain([0, 0], [0, 0]);
-	
 	var B500 = new mkap.StressStrain([0, 2.175, 25], [0, 435, 435]);
+	var calcHookup = mkap.calcHookup;
 	
 	exports.rectangle = rectangle;
 	exports.m_n_kappa = m_n_kappa;
 	exports.diagramConcreteBiLinearULS = diagramConcreteBiLinearULS;
 	exports.B500 = B500;
 	exports.diagramNoConcreteTension = diagramNoConcreteTension;
+	exports.calcHookup = calcHookup;
 
 /***/ },
-/* 185 */,
-/* 186 */
+/* 185 */
 /*!***********************!*\
   !*** ./src/index.css ***!
   \***********************/
@@ -22695,7 +22719,7 @@
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(/*! !./../~/css-loader!./index.css */ 187);
+	var content = __webpack_require__(/*! !./../~/css-loader!./index.css */ 186);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(/*! ./../~/style-loader/addStyles.js */ 182)(content, {});
@@ -22715,7 +22739,7 @@
 	}
 
 /***/ },
-/* 187 */
+/* 186 */
 /*!**************************************!*\
   !*** ./~/css-loader!./src/index.css ***!
   \**************************************/

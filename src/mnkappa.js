@@ -1,7 +1,7 @@
 "use strict";
 
 function rectangle(b, h) {
-    /*
+    /**
     * Create a cross section required for the M-N-Kappa solver.
     *
     * @param a: (float) Width of the cross section
@@ -17,7 +17,7 @@ function rectangle(b, h) {
 }
 
 function m_n_kappa(cs, fc, fct, fs, as, z, ned) {
-    /*
+    /**
     * Prepare a m_n_kappa instance.
     *
     * @param cs: (Polygon)
@@ -25,19 +25,16 @@ function m_n_kappa(cs, fc, fct, fs, as, z, ned) {
     * @param fct: (StressStrain) Concrete tensile stress strain diagram.
     * @param fs: (StressStrain) Reinforcement stress strain diagram.
     * @param as: (Array) Array with area values of the reinforcement.
-    * @param z: (Array) Distance of the reinforcement from the top of the cross section.
+    * @param z: (Array) Distance of the reinforcement from the bottom of the cross section.
     * @param ned: (float) Axial force value.
     *
     * @returns moment kappa instance
     * */
 
     let m = new mkap.MomentKappa(cs, fc, fct);
+    m.instantiate_standard_reinforcement(as, z, fs);
     m.normal_force = ned;
-    m.mp = 0;
-    m.rebar_As = as;
-    m.prestress = m.m0 = m.d_stress = m.d_strain = Array.apply(null, Array(as.length)).map(Number.prototype.valueOf, 0);
-    m.rebar_z = z;
-    m.rebar_diagram = fs;
+
     return m
 }
 
@@ -47,7 +44,7 @@ function diagramConcreteBiLinearULS(stress) {
 }
 
 const diagramNoConcreteTension = new mkap.StressStrain([0, 0], [0, 0]);
-
 const B500 = new mkap.StressStrain([0, 2.175, 25], [0, 435, 435]);
+let calcHookup = mkap.calcHookup;
 
-export {rectangle, m_n_kappa, diagramConcreteBiLinearULS, B500, diagramNoConcreteTension}
+export {rectangle, m_n_kappa, diagramConcreteBiLinearULS, B500, diagramNoConcreteTension, calcHookup}

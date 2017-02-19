@@ -1,5 +1,6 @@
 "use strict";
-import {rectangle, m_n_kappa, B500, diagramNoConcreteTension, diagramConcreteBiLinearULS} from "./mnkappa.js"
+import {rectangle, m_n_kappa, B500, diagramNoConcreteTension, diagramConcreteBiLinearULS,
+calcHookup} from "./mnkappa.js"
 
 const fyd = 435;
 const eps_yd = fyd / 2e5;
@@ -25,9 +26,9 @@ class ColumnNENEN {
         this.fck = fck;
         this.rho = rho;
         this.l0 = l0;
-        this.m0e = detM0e(m1, m2);
+        this.m0ed = detM0e(m1, m2);
 
-        this.i = 0 // needs to be determined before det params
+        this.i = 0; // needs to be determined before det params
 
     }
 
@@ -55,23 +56,51 @@ class ColumnNENEN {
     }
 
     solve() {
-        let b = 100;
-
-        let as = this.rho * Math.pow(b, 2) / 2;
-        let cs = rectangle(b, b);
         let fc = diagramConcreteBiLinearULS(this.fck / 1.5);
-        let m = m_n_kappa(cs, fc, diagramNoConcreteTension, [B500, B500], [as, as], [0.2 * b, 0.8 * b]  ,
-            -Math.abs(this.ned));
-        m.solver(true, 3.5, false);
-        m.det_m_kappa();
-        console.log(m.moment)
+        let b = 1000;
+        var c = 0;
+        while(true) {
+            this.i = b / 3.46;
+            let as = this.rho * Math.pow(b, 2) / 2;
+            let cs = rectangle(b, b);
 
+            let m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
+            calcHookup(0.05, m);
+            m.det_m_kappa();
+
+            let M2 = this.det_params(Math.pow(b, 2)).M2;
+            let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
+
+            if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
+                console.log("convergence", m.validity());
+                break
+            }
+
+            let factor = std.convergence(m.moment, M0EdM2);
+            console.log(factor, "factor")
+            b *= factor
+
+
+            console.log(M0EdM2, m.moment, m.validity(), b);
+
+            if (!isFinite(b)) {
+                console.log("break")
+                break
+            }
+            c++;
+
+
+            if (c > 250) {
+                console.log("max iter")
+                break
+            }
+
+        }
     }
 
 
 
 }
 
-let test = new ColumnNENEN(100, 100, 100, 100, 100, 100);
+let test = new ColumnNENEN(75e6, 50e6, -100e3, 13.3, 0.02, 10e3);
 test.solve()
-console.log("ja")
