@@ -117,7 +117,7 @@ class ColumnNENEN {
                 // }
 
                 if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
-                    console.log("convergence", m.validity());
+                    console.log("convergence");
                     break
                 }
 
@@ -125,7 +125,7 @@ class ColumnNENEN {
                 console.log(M0EdM2, m.moment, m.validity(), b);
 
                 if (!isFinite(b)) {
-                    console.log("break")
+                    console.log("break");
                     break
                 }
                 c++;

@@ -6,7 +6,8 @@
     "babel-plugin-transform-class-properties": "^6.22.0",
     "babel-plugin-transform-es2015-arrow-functions": "^6.22.0",
     "css-loader": "^0.26.1",
-    "react-scripts": "0.8.5"
+    "react-scripts": "0.8.5",
+    "webpack": "^2.2.1"
   },
   "dependencies": {
     "react": "^15.4.2",
@@ -18,5 +19,17 @@
     "build": "react-scripts build && webpack -p",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
-  }
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).",
+  "main": "webpack.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ritchie46/column-design.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ritchie46/column-design/issues"
+  },
+  "homepage": "https://github.com/ritchie46/column-design#readme"
 }
