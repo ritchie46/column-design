@@ -16,3 +16,4 @@ npm-debug.log
 ./public/bundle.js
 .idea
 *bundle.js
+public
