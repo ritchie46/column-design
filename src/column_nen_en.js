@@ -18,7 +18,7 @@ function detM0e(m1, m2) {
     return m0e > 0.4 * m02 ? m0e : 0.4 * m0e;
 }
 
-class ColumnNENEN {
+export default class ColumnNENEN {
     constructor(m1, m2, ned, fck, rho, l0) {
         this.m1 = m1;
         this.m2 = m2;
@@ -147,5 +147,3 @@ class ColumnNENEN {
 
 }
 
-let test = new ColumnNENEN(756, 50e6, -2000e3, 13.3, 0.03, 4e3);
-test.solve();

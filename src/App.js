@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import './App.css';
-import "./column_nen_en.js"
+import ColumnNENEN from "./column_nen_en.js"
 
 class App extends Component {
     constructor() {
@@ -23,7 +23,7 @@ class App extends Component {
           <Input label="Buckling length :" unit="m" name="l0" function={this.setHandler}/>
           <Input label="Reinforcement percentage: " unit="%" name="rho" function={this.setHandler}/>
           <Input label="Unity check: " value="1" name="UC" function={this.setHandler}/>
-          <Button label="Go!" function={executeColumn}/>
+          <Button label="Go!" function={executeColumn} args={this.input}/>
         </div>
   );
   }
@@ -31,7 +31,8 @@ class App extends Component {
   setHandler = (e) => {
       this.input[e.target.name] = parseFloat(e.target.value);
       console.log(this.input)
-  }
+  };
+
 
 }
 
@@ -56,17 +57,17 @@ class Button extends React.Component {
     render() {
         return (
             <div>
-                <button type="button" onClick={this.props.function}>{this.props.label} </button>
+                <button type="button" onClick={() => this.props.function(this.props.args)}>{this.props.label} </button>
             </div>
         )
     }
 }
 
+function executeColumn(i) {
 
-function executeColumn() {
-
+    let calc = new ColumnNENEN(i.M1, i.M2, i.Ned, 30, i.rho, i.l0);
+    calc.solve()
 }
-
 
 
 export default App;
