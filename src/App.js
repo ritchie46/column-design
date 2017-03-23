@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
-
+import ReactDOM from 'react-dom';
 import './App.css';
 import ColumnNENEN from "./column_nen_en.js"
 
 class App extends Component {
     constructor() {
         super();
-        this.input = {"UC": 1}
+        this.input = {"UC": 1};
+        this.output = null
     }
   render() {
     return (
@@ -23,15 +24,53 @@ class App extends Component {
           <Input label="Buckling length :" unit="m" name="l0" function={this.setHandler}/>
           <Input label="Reinforcement percentage: " unit="%" name="rho" function={this.setHandler}/>
           <Input label="Unity check: " value="1" name="UC" function={this.setHandler}/>
-          <Button label="Go!" function={executeColumn} args={this.input}/>
+          <Button label="Go!" function={this.executeColumn} args={this.input}/>
+          {this.output}
         </div>
-  );
+
+  )
   }
 
-  setHandler = (e) => {
-      this.input[e.target.name] = parseFloat(e.target.value);
-      console.log(this.input)
-  };
+    setHandler = (e) => {
+        this.input[e.target.name] = parseFloat(e.target.value);
+        console.log(this.input)
+
+    };
+
+    // Use arrow functions because this will remain on class level.
+    executeColumn = (i) => {
+
+    let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, 30, i.rho / 1e2, i.l0 * 1e3);
+    calc.solve();
+    console.log(calc.validity, calc.width)
+    if (calc.validity) {
+
+        this.output = <div>
+            <h2>Output</h2>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>C30/37</th>
+                </tr>
+                <tr>
+                    <td>Dimensions</td>
+                    <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
+                </tr>
+                <tr>
+                    <td>As</td>
+                </tr>
+                <tr>
+                    <td>M<sub>Rd</sub></td>
+                </tr>
+                <tr>
+                    <td>N<sub>Rd</sub></td>
+                </tr>
+            </table>
+        </div>;
+    }
+    ReactDOM.render(<App />, document.getElementById('root'))
+
+}
 
 
 }
@@ -63,11 +102,7 @@ class Button extends React.Component {
     }
 }
 
-function executeColumn(i) {
 
-    let calc = new ColumnNENEN(i.M1, i.M2, i.Ned, 30, i.rho, i.l0);
-    calc.solve()
-}
 
 
 export default App;

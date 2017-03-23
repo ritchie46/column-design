@@ -19,6 +19,14 @@ function detM0e(m1, m2) {
 }
 
 export default class ColumnNENEN {
+    /*
+     * Compute the minimum required column dimension conform NEN-EN.
+     * Units:
+     *  N
+     *  mm
+     *  %
+     *
+     */
     constructor(m1, m2, ned, fck, rho, l0) {
         this.m1 = m1;
         this.m2 = m2;
@@ -29,9 +37,19 @@ export default class ColumnNENEN {
         this.m0ed = detM0e(m1, m2);
 
         this.i = 0; // needs to be determined before det params
+
+        // results
+        this.validity = false;
+        this.width = null;
+        this.As = null
     }
 
     det_params(area) {
+        /*
+         * Determine the NEN-EN parameters. All the parameters are required to determine M2. These are assigned for
+         * readability.
+         *
+         */
         // Kr
         let n = this.ned / (area * this.fck / 1.5);
         this.as = area * this.rho;
@@ -55,6 +73,10 @@ export default class ColumnNENEN {
     }
 
     solve() {
+        /*
+         * Solve for the minimum required dimensions. First for Ned. If with these dimensions Med > Mrd, determine
+         * the dimension based on Med.
+         */
         let fcd = this.fck / 1.5;
         let fc = diagramConcreteBiLinearULS(fcd);
         let b = 1000;
@@ -73,6 +95,9 @@ export default class ColumnNENEN {
                 calcHookup(0.05, m);
                 m.det_m_kappa();
                 console.log("convergence", m.moment / 1e6, "count", c);
+                this.validity = true;
+                this.width = b;
+                this.As = as;
                 break
             }
             b *= std.convergence(nrd, -this.ned);
@@ -118,6 +143,9 @@ export default class ColumnNENEN {
 
                 if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
+                    this.validity = true;
+                    this.width = b;
+                    this.As = as;
                     break
                 }
 
@@ -125,13 +153,14 @@ export default class ColumnNENEN {
                 console.log(M0EdM2, m.moment, m.validity(), b);
 
                 if (!isFinite(b)) {
+                    this.validity = false;
                     console.log("break");
                     break
                 }
                 c++;
 
-
                 if (c > 250) {
+                    this.validity = false;
                     console.log("max iter");
                     break
                 }
