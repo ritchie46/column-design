@@ -173,6 +173,5 @@ export default class ColumnNENEN {
     }
 
 
-
 }
 
