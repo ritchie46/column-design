@@ -7,7 +7,6 @@ class App extends Component {
     constructor() {
         super();
         this.input = {"UC": 1};
-        this.output = null
     }
 
     render() {
@@ -26,7 +25,7 @@ class App extends Component {
               <Input label="Reinforcement percentage: " unit="%" name="rho" function={this.setHandler}/>
               <Input label="Unity check: " value="1" name="UC" function={this.setHandler}/>
               <Button label="Go!" function={this.executeColumn} args={this.input}/>
-              {this.output}
+              {this.props.output}
             </div>
     )
     }
@@ -39,7 +38,44 @@ class App extends Component {
 
     // Use arrow functions because this will remain on class level.
     executeColumn = (i) => {
-        ReactDOM.render(<Loader callback={test} args={i} />, document.getElementById("root"));
+
+        // wrap in an async function so that rendering of the loader will be rendered first.
+        let compute = async(function (i) {
+            let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, 30, i.rho / 1e2, i.l0 * 1e3);
+            calc.solve();
+            console.log(calc.validity);
+            if (calc.validity) {
+                let output = <div>
+                    <h2>Output</h2>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th>C30/37</th>
+                        </tr>
+                        <tr>
+                            <td>Dimensions</td>
+                            <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
+                        </tr>
+                        <tr>
+                            <td>As</td>
+                            <td>{Math.round(calc.As)}</td>
+                        </tr>
+                        <tr>
+                            <td>M<sub>Rd</sub></td>
+                            <td>{Math.round(calc.mrd)}</td>
+                        </tr>
+                        <tr>
+                            <td>N<sub>Rd</sub></td>
+                        </tr>
+                    </table>
+                </div>;
+
+                ReactDOM.render(<App output={output}/>, document.getElementById('root'))
+            }
+
+        });
+
+        ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
 
 
 
@@ -48,11 +84,9 @@ class App extends Component {
 
 }
 
-function test(i) {
+let test = async(function (i) {
     console.log("hier")
-    let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, 30, i.rho / 1e2, i.l0 * 1e3);
-    calc.solve();
-    // console.log(calc.validity, calc.width)
+
     // if (calc.validity) {
     //
     //     this.output = <div>
@@ -80,7 +114,7 @@ function test(i) {
     //     </div>;
     // }
     // ReactDOM.render(<App />, document.getElementById('root'))
-}
+})
 
 
 function Input(props) {
@@ -130,6 +164,13 @@ Loader.prototype.componentWillMount = function () {
 };
 
 
-
+function async(func) {
+    return function () {
+        let args = arguments;
+        setTimeout(function() {
+            func.apply(this, args)
+        }, 0);
+    };
+}
 
 export default App;

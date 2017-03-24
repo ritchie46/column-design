@@ -83,21 +83,33 @@ export default class ColumnNENEN {
         let c = 0;
         let area;
         let m;
+        let as;
+        let nrd;
+
+        let assign = () => {
+            this.validity = true;
+            this.width = b;
+            this.As = as;
+            this.mrd = m.moment;
+            this.nrd = nrd
+        }
 
         // Iterate the minimum required dimension for the axial force.
         while(true) {
             area = Math.pow(b, 2);
             let nrd = this.axialForceResistance(area);
             if (std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
-                let as = this.rho * area / 2;
+                as = this.rho * area / 2;
                 let cs = rectangle(b, b);
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
                 calcHookup(0.05, m);
                 m.det_m_kappa();
                 console.log("convergence", m.moment / 1e6, "count", c);
-                this.validity = true;
-                this.width = b;
-                this.As = as;
+                console.log(m.moment)
+                assign();
+                // this.validity = true;
+                // this.width = b;
+                // this.As = as;
                 break
             }
             b *= std.convergence(nrd, -this.ned);
@@ -120,11 +132,11 @@ export default class ColumnNENEN {
 
             while(true) {
                 this.i = b / 3.46;
-                let area = Math.pow(b, 2);
-                let as = this.rho * area / 2;
+                area = Math.pow(b, 2);
+                as = this.rho * area / 2;
                 let cs = rectangle(b, b);
 
-                let m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
+                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
                 calcHookup(0.05, m);
                 m.det_m_kappa();
 
@@ -143,9 +155,10 @@ export default class ColumnNENEN {
 
                 if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
-                    this.validity = true;
-                    this.width = b;
-                    this.As = as;
+                    assign()
+                    // this.validity = true;
+                    // this.width = b;
+                    // this.As = as;
                     break
                 }
 
