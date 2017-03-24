@@ -92,12 +92,12 @@ export default class ColumnNENEN {
             this.As = as;
             this.mrd = m.moment;
             this.nrd = nrd
-        }
+        };
 
         // Iterate the minimum required dimension for the axial force.
         while(true) {
             area = Math.pow(b, 2);
-            let nrd = this.axialForceResistance(area);
+            nrd = this.axialForceResistance(area);
             if (std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
@@ -105,11 +105,7 @@ export default class ColumnNENEN {
                 calcHookup(0.05, m);
                 m.det_m_kappa();
                 console.log("convergence", m.moment / 1e6, "count", c);
-                console.log(m.moment)
                 assign();
-                // this.validity = true;
-                // this.width = b;
-                // this.As = as;
                 break
             }
             b *= std.convergence(nrd, -this.ned);
@@ -155,10 +151,7 @@ export default class ColumnNENEN {
 
                 if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
-                    assign()
-                    // this.validity = true;
-                    // this.width = b;
-                    // this.As = as;
+                    assign();
                     break
                 }
 

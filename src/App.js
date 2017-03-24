@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import './App.css';
 import ColumnNENEN from "./column_nen_en.js"
 
+let state = {}
+
 class App extends Component {
     constructor() {
         super();
@@ -41,32 +43,44 @@ class App extends Component {
 
         // wrap in an async function so that rendering of the loader will be rendered first.
         let compute = async(function (i) {
-            let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, 30, i.rho / 1e2, i.l0 * 1e3);
+            let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, i.concrete, i.rho / 1e2, i.l0 * 1e3);
             calc.solve();
+
+            result.push(<th>{i.concrete}</th>);
+
             console.log(calc.validity);
             if (calc.validity) {
                 let output = <div>
                     <h2>Output</h2>
                     <table>
-                        <tr>
-                            <th></th>
-                            <th>C30/37</th>
-                        </tr>
-                        <tr>
-                            <td>Dimensions</td>
-                            <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
-                        </tr>
-                        <tr>
-                            <td>As</td>
-                            <td>{Math.round(calc.As)}</td>
-                        </tr>
-                        <tr>
-                            <td>M<sub>Rd</sub></td>
-                            <td>{Math.round(calc.mrd)}</td>
-                        </tr>
-                        <tr>
-                            <td>N<sub>Rd</sub></td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <th></th>
+                                <th>Units</th>
+                                <th>C30/37</th>
+                                {result}
+                            </tr>
+                            <tr>
+                                <td>Dimensions</td>
+                                <td>mm x mm</td>
+                                <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
+                            </tr>
+                            <tr>
+                                <td>As</td>
+                                <td>mm<sup>2</sup></td>
+                                <td>{Math.round(calc.As)}</td>
+                            </tr>
+                            <tr>
+                                <td>M<sub>Rd</sub></td>
+                                <td>kNm</td>
+                                <td>{Math.round(calc.mrd / 1e6 * 100) / 100}</td>
+                            </tr>
+                            <tr>
+                                <td>N<sub>Rd</sub></td>
+                                <td>kN</td>
+                                <td>{Math.round(calc.nrd / 1e3 * 100) / 100}</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>;
 
@@ -75,47 +89,19 @@ class App extends Component {
 
         });
 
-        ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
+        let concrete = [20, 30, 40];
+        let result = []
 
+        for (let j = 0; j < 3; j++) {
+            i.concrete = concrete[j];
+            ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
 
+        }
 
 }
 
 
 }
-
-let test = async(function (i) {
-    console.log("hier")
-
-    // if (calc.validity) {
-    //
-    //     this.output = <div>
-    //         <h2>Output</h2>
-    //         <table>
-    //             <tr>
-    //                 <th></th>
-    //                 <th>C30/37</th>
-    //             </tr>
-    //             <tr>
-    //                 <td>Dimensions</td>
-    //                 <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
-    //             </tr>
-    //             <tr>
-    //                 <td>As</td>
-    //                 <td>{calc.As}</td>
-    //             </tr>
-    //             <tr>
-    //                 <td>M<sub>Rd</sub></td>
-    //             </tr>
-    //             <tr>
-    //                 <td>N<sub>Rd</sub></td>
-    //             </tr>
-    //         </table>
-    //     </div>;
-    // }
-    // ReactDOM.render(<App />, document.getElementById('root'))
-})
-
 
 function Input(props) {
     let type = props.type || "number";
