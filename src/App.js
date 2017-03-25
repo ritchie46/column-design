@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
 import ColumnNENEN from "./column_nen_en.js"
-let workerModule = require("worker-loader!./worker.js");
+let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 
 class App extends Component {
     constructor() {
@@ -40,14 +40,10 @@ class App extends Component {
     // Use arrow functions because this will remain on class level.
     executeColumn = (i) => {
 
-        // let worker = new Worker("./worker.js");
-        // worker.postMessage("3");
-
-
+        i.concrete = 30;
         let worker = new workerModule();
 
-
-        worker.postMessage("3");
+        worker.postMessage(i);
 
         // wrap in an async function so that rendering of the loader will be rendered first.
         let compute = function (i) {

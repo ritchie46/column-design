@@ -1,6 +1,7 @@
 "use strict";
 import {rectangle, m_n_kappa, B500, diagramNoConcreteTension, diagramConcreteBiLinearULS,
 calcHookup} from "./mnkappa.js"
+let vanilla = require("./vanilla_mkap.min.js");
 
 const fyd = 435;
 const eps_yd = fyd / 2e5;
@@ -72,7 +73,7 @@ export default class ColumnNENEN {
         return {"M2": M2}
     }
 
-    solve() {
+    solve = () => {
         /*
          * Solve for the minimum required dimensions. First for Ned. If with these dimensions Med > Mrd, determine
          * the dimension based on Med.
@@ -98,7 +99,7 @@ export default class ColumnNENEN {
         while(true) {
             area = Math.pow(b, 2);
             nrd = this.axialForceResistance(area);
-            if (std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
+            if (vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
@@ -108,7 +109,7 @@ export default class ColumnNENEN {
                 assign();
                 break
             }
-            b *= std.convergence(nrd, -this.ned);
+            b *= vanilla.std.convergence(nrd, -this.ned);
             c++;
 
             if (c > 200) {
@@ -139,24 +140,24 @@ export default class ColumnNENEN {
                 let M2 = this.det_params(area).M2;
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
-                let factor = std.convergence(m.moment, M0EdM2, 4);
-                console.log("factor: ", factor);
+                let factor = vanilla.std.convergence(m.moment, M0EdM2, 4);
+                //console.log("factor: ", factor);
                 b *= factor;
 
                 // if (this.axialForceResistance(area) < -this.ned) {
-                //     console.log(std.convergence(this.axialForceResistance(area), -this.ned), this.axialForceResistance(area)/1e3);
+                //     console.log(vanilla.std.convergence(this.axialForceResistance(area), -this.ned), this.axialForceResistance(area)/1e3);
                 //     console.log("minimal axial force dimension");
                 //     break
                 // }
 
-                if (std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
+                if (vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
                     assign();
                     break
                 }
 
 
-                console.log(M0EdM2, m.moment, m.validity(), b);
+                //console.log(M0EdM2, m.moment, m.validity(), b);
 
                 if (!isFinite(b)) {
                     this.validity = false;
@@ -172,7 +173,7 @@ export default class ColumnNENEN {
                 }
             }
         }
-    }
+    };
 
     axialForceResistance(area) {
         return area * this.fck / 1.5 + area * this.rho * B500.det_stress(1.75)
