@@ -178,6 +178,5 @@ export default class ColumnNENEN {
         return area * this.fck / 1.5 + area * this.rho * B500.det_stress(1.75)
     }
 
-
 }
 
