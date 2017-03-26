@@ -99,17 +99,19 @@ export default class ColumnNENEN {
         let fHistoryHigh = 1e12;
         let fHistoryLow = -1e12;
         let div = 3;
+        let bMin;
         // Iterate the minimum required dimension for the axial force.
         while(true) {
             area = Math.pow(b, 2);
             nrd = this.axialForceResistance(area);
-            if (vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.975)) {
+            if (    vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.975)) {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
                 calcHookup(0.05, m);
                 m.det_m_kappa();
-                console.log("Axial force convergence", "count", c);
+                console.log("Axial force convergence", "count", c, "width", b);
+                bMin = b;
                 break
             }
             let factor = vanilla.std.convergence(nrd, -this.ned, div);
@@ -119,6 +121,7 @@ export default class ColumnNENEN {
             if (c > 50) {
                 break;
             }
+
             // Adaptive convergence divider
             // Change the division based on the factor history
             if (factor > 1) {
@@ -157,6 +160,7 @@ export default class ColumnNENEN {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
 
+                // moment validation
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
                 calcHookup(0.05, m);
                 m.det_m_kappa();
@@ -164,13 +168,25 @@ export default class ColumnNENEN {
                 let M2 = this.det_params(area).M2;
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
-                let factor = vanilla.std.convergence(m.moment, M0EdM2, div);
-                // console.log("factor: ", factor, "div", div, "count", c, "width", b);
-                b *= factor;
+                let factorMoment = vanilla.std.convergence(m.moment, M0EdM2, div);
+                console.log("factor: ", factorMoment, "div", div, "count", c, "width", b, "M0MEd2", Math.round(M0EdM2/1e6),
+                "moment", Math.round(m.moment/1e6));
+                //b *= factorMoment;
+
+                // axial force validation
+                nrd = this.axialForceResistance(area);
+                let factorAxial = vanilla.std.convergence(nrd, -this.ned, 3);
+                if (factorAxial > 1) {  // area too small for the axial force
+                    b *= factorAxial
+                }
+                else {
+                    b *= factorMoment
+                }
 
 
-                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.05, 0.95) && m.validity()) {
-                    console.log("convergence");
+                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.02, 0.90) && m.validity() ||
+                    vanilla.std.convergence_conditions(nrd, -this.ned, 0.99, 0.95) && m.moment > M0EdM2) {
+                    console.log("Moment convergence", "count", c);
                     assign();
                     break
                 }
@@ -183,25 +199,26 @@ export default class ColumnNENEN {
                 }
                 c++;
 
-                if (c > 50) {
+                if (c > 100) {
                     this.validity = false;
                     console.log("max iter");
+                    assign();
                     break
                 }
 
                 // Adaptive convergence divider
                 // Change the division based on the factor history
-                if (factor > 1) {
-                    if (factor > fHistoryHigh) {
+                if (factorMoment > 1) {
+                    if (factorMoment > fHistoryHigh) {
                         div++
                     }
-                    fHistoryHigh = factor;
+                    fHistoryHigh = factorMoment;
                 }
                 else {
-                    if (factor < fHistoryLow) {
+                    if (factorMoment < fHistoryLow) {
                         div++
                     }
-                    fHistoryLow = factor
+                    fHistoryLow = factorMoment
                 }
 
             }
