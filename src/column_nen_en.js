@@ -150,6 +150,7 @@ export default class ColumnNENEN {
             console.log("Axial force dimensions not sufficient");
             c = 0;
 
+            let dm = 0;
             let fHistoryHigh = 1e12;
             let fHistoryLow = -1e12;
             let div = 5;
@@ -171,26 +172,17 @@ export default class ColumnNENEN {
                 let factorMoment = vanilla.std.convergence(m.moment, M0EdM2, div);
                 console.log("factor: ", factorMoment, "div", div, "count", c, "width", b, "M0MEd2", Math.round(M0EdM2/1e6),
                 "moment", Math.round(m.moment/1e6));
-                //b *= factorMoment;
+                b *= factorMoment;
 
                 // axial force validation
                 nrd = this.axialForceResistance(area);
-                let factorAxial = vanilla.std.convergence(nrd, -this.ned, 3);
-                if (factorAxial > 1) {  // area too small for the axial force
-                    b *= factorAxial
-                }
-                else {
-                    b *= factorMoment
-                }
-
-
-                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.02, 0.90) && m.validity() ||
-                    vanilla.std.convergence_conditions(nrd, -this.ned, 0.99, 0.95) && m.moment > M0EdM2) {
-                    console.log("Moment convergence", "count", c);
-                    assign();
-                    break
-                }
-
+                //let factorAxial = vanilla.std.convergence(nrd, -this.ned, 3);
+                // if (factorAxial > 1) {  // area too small for the axial force
+                //     b *= factorAxial
+                // }
+                // else {
+                //     b *= factorMoment
+                // }
 
                 if (!isFinite(b)) {
                     this.validity = false;
@@ -199,9 +191,23 @@ export default class ColumnNENEN {
                 }
                 c++;
 
-                if (c > 100) {
+                if (c > 30) {
                     this.validity = false;
                     console.log("max iter");
+                    assign();
+                    break
+                }
+
+                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.02, 0.90) && m.validity() ||
+                    vanilla.std.convergence_conditions(nrd, -this.ned, 0.99, 0.95) && m.moment > M0EdM2) {
+                    console.log("Moment convergence", "count", c);
+                    assign();
+                    break
+                }
+
+                dm = m.moment - M0EdM2;
+                if (dm > 0 && dm < 25e6) {
+                    console.log("Moment dm < 25 kNm", "count", c);
                     assign();
                     break
                 }

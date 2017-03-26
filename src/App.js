@@ -71,17 +71,17 @@ class App extends Component {
                     <tr>
                         <td>M<sub>Rd</sub></td>
                         <td>kNm</td>
-                        <td>{Math.round(e.data.mrd / 1e6 * 100) / 100}</td>
+                        <td>{Math.round(e.data.mrd / 1e6)}</td>
                     </tr>
                     <tr>
                         <td>N<sub>Rd</sub></td>
                         <td>kN</td>
-                        <td>{Math.round(e.data.nrd / 1e3 * 100) / 100}</td>
+                        <td>{Math.round(e.data.nrd / 1e3)}</td>
                     </tr>
                     <tr>
                         <td>M<sub>Ed;2nd</sub></td>
                         <td>kN</td>
-                        <td>{Math.round(e.data.M0EdM2 / 1e6 * 100) / 100}</td>
+                        <td>{Math.round(e.data.M0EdM2 / 1e6)}</td>
                     </tr>
                     </tbody>
                 </table>
