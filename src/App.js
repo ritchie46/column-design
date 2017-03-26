@@ -5,9 +5,9 @@ import ColumnNENEN from "./column_nen_en.js"
 let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 
 class App extends Component {
-    constructor() {
-        super();
-        this.input = {"UC": 1};
+    constructor(props) {
+        super(props);
+        this.values = this.props.values  // more will be appended in setHandler()
     }
 
     render() {
@@ -16,23 +16,22 @@ class App extends Component {
             <div className="App-header">
               <h2>Column design</h2>
             </div>
-            <p className="App-intro">
-              To get started, edit <code>src/App.js</code> and save to reload.
-            </p>
-              <Input label="Axial force: " unit="kN" name="Ned" function={this.setHandler}/>
-              <Input label="Bending moment top: " unit="kNm" name="M1" function={this.setHandler}/>
-              <Input label="Bending moment bottom: " unit="kNm" name="M2" function={this.setHandler}/>
-              <Input label="Buckling length :" unit="m" name="l0" function={this.setHandler}/>
-              <Input label="Reinforcement percentage: " unit="%" name="rho" function={this.setHandler}/>
-              <Input label="Unity check: " value="1" name="UC" function={this.setHandler}/>
-              <Button label="Go!" function={this.executeColumn} args={this.input}/>
+            <div>
+              <Input label="Axial force: " value={Math.abs(this.values.Ned)} unit="kN" name="Ned" function={this.setHandler}/>
+              <Input label="Bending moment top: " value={this.values.M1} unit="kNm" name="M1" function={this.setHandler}/>
+              <Input label="Bending moment bottom: " value={this.values.M2} unit="kNm" name="M2" function={this.setHandler}/>
+              <Input label="Buckling length :" unit="m" value={this.values.l0} name="l0" function={this.setHandler}/>
+              <Input label="Reinforcement percentage: " value={this.values.rho} unit="%" name="rho" function={this.setHandler}/>
+              <Input label="Unity check: " value={this.values.UC}  name="UC" function={this.setHandler}/>
+              <Button label="Go!" function={this.executeColumn} args={this.values}/>
               {this.props.output}
+            </div>
             </div>
     )
     }
 
     setHandler = (e) => {
-        this.input[e.target.name] = parseFloat(e.target.value);
+        this.values[e.target.name] = parseFloat(e.target.value);
     };
 
     // Use arrow functions because this will remain on class level.
@@ -48,7 +47,7 @@ class App extends Component {
         worker.onmessage = function (e) {
             let t1 = performance.now();
             console.log("time", t1 -t0);
-            console.log("output", e.data)
+            console.log("output", e.data);
 
             let output = <div>
                 <h2>Output</h2>
@@ -79,11 +78,16 @@ class App extends Component {
                         <td>kN</td>
                         <td>{Math.round(e.data.nrd / 1e3 * 100) / 100}</td>
                     </tr>
+                    <tr>
+                        <td>M<sub>Ed;2nd</sub></td>
+                        <td>kN</td>
+                        <td>{Math.round(e.data.M0EdM2 / 1e6 * 100) / 100}</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>;
 
-            ReactDOM.render(<App output={output}/>, document.getElementById("root"))
+            ReactDOM.render(<App output={output} values={i}/>, document.getElementById("root"))
         };
 }
 
@@ -117,7 +121,7 @@ class Button extends React.Component {
 
 function Loader(props) {
     return (
-        <div>
+        <div className="loader-header">
             <h2>{props.header}</h2>
             <div className="loader"></div>
         </div>

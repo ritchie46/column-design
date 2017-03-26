@@ -5,6 +5,6 @@ import './index.css';
 import "./column_nen_en.js"
 
 ReactDOM.render(
-  <App />,
+  <App values={{UC: 1}}/>,
   document.getElementById('root')
 );

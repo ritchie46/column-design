@@ -7,6 +7,6 @@ onmessage = function (e) {
         e.data.rho / 1e2, e.data.l0 * 1e3);
     calc.solve();
 
-    postMessage({width: calc.width, As: calc.As, mrd: calc.mrd, nrd: calc.nrd})
+    postMessage({width: calc.width, As: calc.As, mrd: calc.mrd, nrd: calc.nrd, M0EdM2: calc.M0EdM2})
 
 };

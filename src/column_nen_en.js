@@ -92,7 +92,8 @@ export default class ColumnNENEN {
             this.width = b;
             this.As = as;
             this.mrd = m.moment;
-            this.nrd = nrd
+            this.nrd = nrd;
+            this.M0EdM2 = M0EdM2
         };
 
         let fHistoryHigh = 1e12;
@@ -109,7 +110,6 @@ export default class ColumnNENEN {
                 calcHookup(0.05, m);
                 m.det_m_kappa();
                 console.log("Axial force convergence", "count", c);
-                assign();
                 break
             }
             let factor = vanilla.std.convergence(nrd, -this.ned, div);
@@ -140,7 +140,8 @@ export default class ColumnNENEN {
         let M2 = this.det_params(area).M2;
         let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
         if (m.moment > M0EdM2) {  // The cross section is sufficient.
-            console.log("Minimal axial force is sufficient")
+            console.log("Minimal axial force is sufficient");
+            assign();
         }
         else {
             console.log("Axial force dimensions not sufficient");
