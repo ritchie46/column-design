@@ -27,10 +27,10 @@ var config = {
     }
 };
 
-var speedtest = {
-    entry: APP_DIR + '/speedtest/index.js',
+var speedtest_es6 = {
+    entry: APP_DIR + '/speedtest-es6/index.js',
     output: {
-        path: BUILD_DIR + "/speedtest",
+        path: BUILD_DIR + "/speedtest-es6",
         filename: 'bundle.js'
     },
     module : {
@@ -45,4 +45,23 @@ var speedtest = {
     }
 };
 
-module.exports = [config, speedtest];
+var speedtest_es5 = {
+    entry: APP_DIR + '/speedtest-es5/index.js',
+    output: {
+        path: BUILD_DIR + "/speedtest-es5",
+        filename: 'bundle.js'
+    },
+    module : {
+
+        loaders: [
+            {
+                test: /\.jsx?/,
+                include: APP_DIR,
+                loader: "babel-loader",
+            }
+        ]
+    }
+};
+
+
+module.exports = [config, speedtest_es6, speedtest_es5];

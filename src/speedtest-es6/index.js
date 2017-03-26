@@ -12,7 +12,11 @@ let data = {
     l0: 5
 };
 
-worker.postMessage(data);
+for (let i = 1; i < 10; i++) {
+    data.Ned = -i * 1000;
+    worker.postMessage(data);
+}
+
 
 // Event handler when worker has finished.
 worker.onmessage = function (e) {
@@ -21,3 +25,5 @@ worker.onmessage = function (e) {
     console.log("output", e.data)
 };
 
+// Note: dropping the amount of iterations in the vanilla_mkap.min.js does seem to increase the iterations time.
+// Probably due to not finding valid convergence.
