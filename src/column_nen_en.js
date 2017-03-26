@@ -1,6 +1,6 @@
 "use strict";
 import {rectangle, m_n_kappa, B500, diagramNoConcreteTension, diagramConcreteBiLinearULS,
-calcHookup} from "./mnkappa.js"
+    calcHookup} from "./mnkappa.js"
 let vanilla = require("./vanilla_mkap.min.js");
 
 const fyd = 435;
@@ -95,11 +95,14 @@ export default class ColumnNENEN {
             this.nrd = nrd
         };
 
+        let fHistoryHigh = 1e12;
+        let fHistoryLow = -1e12;
+        let div = 3;
         // Iterate the minimum required dimension for the axial force.
         while(true) {
             area = Math.pow(b, 2);
             nrd = this.axialForceResistance(area);
-            if (vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.99)) {
+            if (vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.975)) {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
@@ -109,11 +112,26 @@ export default class ColumnNENEN {
                 assign();
                 break
             }
-            b *= vanilla.std.convergence(nrd, -this.ned);
+            let factor = vanilla.std.convergence(nrd, -this.ned, div);
+            b *= factor;
             c++;
 
-            if (c > 200) {
+            if (c > 50) {
                 break;
+            }
+            // Adaptive convergence divider
+            // Change the division based on the factor history
+            if (factor > 1) {
+                if (factor > fHistoryHigh) {
+                    div++
+                }
+                fHistoryHigh = factor;
+            }
+            else {
+                if (factor < fHistoryLow) {
+                    div++
+                }
+                fHistoryLow = factor
             }
         }
 
@@ -130,9 +148,9 @@ export default class ColumnNENEN {
 
             let fHistoryHigh = 1e12;
             let fHistoryLow = -1e12;
+            let div = 5;
 
             while(true) {
-                let div = 2;
                 this.i = b / 3.46;
                 area = Math.pow(b, 2);
                 as = this.rho * area / 2;
@@ -146,16 +164,16 @@ export default class ColumnNENEN {
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
                 let factor = vanilla.std.convergence(m.moment, M0EdM2, div);
-                //console.log("factor: ", factor);
+                // console.log("factor: ", factor, "div", div, "count", c, "width", b);
                 b *= factor;
 
-                if (vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
+
+                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.05, 0.95) && m.validity()) {
                     console.log("convergence");
                     assign();
                     break
                 }
 
-                //console.log(M0EdM2, m.moment, m.validity(), b);
 
                 if (!isFinite(b)) {
                     this.validity = false;
@@ -164,7 +182,7 @@ export default class ColumnNENEN {
                 }
                 c++;
 
-                if (c > 250) {
+                if (c > 50) {
                     this.validity = false;
                     console.log("max iter");
                     break
@@ -176,16 +194,15 @@ export default class ColumnNENEN {
                     if (factor > fHistoryHigh) {
                         div++
                     }
-                    else {
-                        fHistoryHigh = factor
-                    }
-                }
-                else if (factor < fHistoryLow) {
-                    div++
+                    fHistoryHigh = factor;
                 }
                 else {
+                    if (factor < fHistoryLow) {
+                        div++
+                    }
                     fHistoryLow = factor
                 }
+
             }
         }
     };

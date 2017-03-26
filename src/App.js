@@ -33,75 +33,58 @@ class App extends Component {
 
     setHandler = (e) => {
         this.input[e.target.name] = parseFloat(e.target.value);
-        console.log(this.input)
-
     };
 
     // Use arrow functions because this will remain on class level.
     executeColumn = (i) => {
-
+        ReactDOM.render(<Loader header="Crunching the numbers"/>, document.getElementById("root"));
         i.concrete = 30;
+        i.Ned = -Math.abs(i.Ned);
         let worker = new workerModule();
-        let t0 = performance.now()
-        // worker.postMessage(i);
-        //
-        // // Event handler when worker has finished.
-        // worker.onmessage = function (e) {
-        //     let t1 = performance.now()
-        //     console.log("time", t1 -t0)
-        //     console.log("output", e.data)
-        // };
+        let t0 = performance.now();
+        worker.postMessage(i);
 
-        // wrap in an async function so that rendering of the loader will be rendered first.
-        let compute = async(function (i) {
-            let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, i.concrete, i.rho / 1e2, i.l0 * 1e3);
-            calc.solve();
-            let t1 = performance.now()
-            console.log("time", t1 -t0)
+        // Event handler when worker has finished.
+        worker.onmessage = function (e) {
+            let t1 = performance.now();
+            console.log("time", t1 -t0);
+            console.log("output", e.data)
 
-            console.log(calc.validity);
-            if (calc.validity) {
-                let output = <div>
-                    <h2>Output</h2>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th></th>
-                                <th>Units</th>
-                                <th>C30/37</th>
-                            </tr>
-                            <tr>
-                                <td>Dimensions</td>
-                                <td>mm x mm</td>
-                                <td>{Math.round(calc.width)}x{Math.round(calc.width)}</td>
-                            </tr>
-                            <tr>
-                                <td>As</td>
-                                <td>mm<sup>2</sup></td>
-                                <td>{Math.round(calc.As)}</td>
-                            </tr>
-                            <tr>
-                                <td>M<sub>Rd</sub></td>
-                                <td>kNm</td>
-                                <td>{Math.round(calc.mrd / 1e6 * 100) / 100}</td>
-                            </tr>
-                            <tr>
-                                <td>N<sub>Rd</sub></td>
-                                <td>kN</td>
-                                <td>{Math.round(calc.nrd / 1e3 * 100) / 100}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>;
+            let output = <div>
+                <h2>Output</h2>
+                <table>
+                    <tbody>
+                    <tr>
+                        <th></th>
+                        <th>Units</th>
+                        <th>C30/37</th>
+                    </tr>
+                    <tr>
+                        <td>Dimensions</td>
+                        <td>mm x mm</td>
+                        <td>{Math.round(e.data.width)}x{Math.round(e.data.width)}</td>
+                    </tr>
+                    <tr>
+                        <td>As</td>
+                        <td>mm<sup>2</sup></td>
+                        <td>{Math.round(e.data.As)}</td>
+                    </tr>
+                    <tr>
+                        <td>M<sub>Rd</sub></td>
+                        <td>kNm</td>
+                        <td>{Math.round(e.data.mrd / 1e6 * 100) / 100}</td>
+                    </tr>
+                    <tr>
+                        <td>N<sub>Rd</sub></td>
+                        <td>kN</td>
+                        <td>{Math.round(e.data.nrd / 1e3 * 100) / 100}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>;
 
-                ReactDOM.render(<App output={output}/>, document.getElementById('root'))
-            }
-
-        })
-        compute(i)
-        //ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
-
-
+            ReactDOM.render(<App output={output}/>, document.getElementById("root"))
+        };
 }
 
 
@@ -132,35 +115,13 @@ class Button extends React.Component {
     }
 }
 
-class Loader extends React.Component {
-    constructor(arg) {
-        // call the Loader with callback = {callback function}
-        // args = {arguments}
-        super();
-        this.callback = arg.callback;
-        this.arguments = arg.args;
-    }
-    render() {
-        return (
-            <div className="loader"></div>
-        )
-    }
-}
-
-Loader.prototype.componentWillMount = function () {
+function Loader(props) {
     return (
-        this.callback(this.arguments)
+        <div>
+            <h2>{props.header}</h2>
+            <div className="loader"></div>
+        </div>
     )
-};
-
-
-function async(func) {
-    return function () {
-        let args = arguments;
-        setTimeout(function() {
-            func.apply(this, args)
-        }, 0);
-    };
 }
 
 export default App;
