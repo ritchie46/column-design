@@ -146,13 +146,13 @@ export default class ColumnNENEN {
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
                 let factor = vanilla.std.convergence(m.moment, M0EdM2, div);
-                console.log("factor: ", factor, "div", div, "count", c);
+                console.log("factor: ", factor, "div", div, "count", c, "width", b);
                 b *= factor;
 
                 console.log("conditions", vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99),
-                    m.validity())
+                    m.validity());
 
-                if (vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
+                if (vanilla.std.convergence_conditions(m.moment, M0EdM2, 1.05, 0.95) && m.validity()) {
                     console.log("convergence");
                     assign();
                     break
@@ -176,17 +176,13 @@ export default class ColumnNENEN {
                 // Adaptive convergence divider
                 // Change the division based on the factor history
                 if (factor > 1) {
-                    console.log("f > 1")
                     if (factor > fHistoryHigh) {
-                        console.log("Div should be raised now, f > f")
                         div++
                     }
                     fHistoryHigh = factor;
                 }
                 else {
-                    console.log("f < 1")
                     if (factor < fHistoryLow) {
-                        console.log("Div should be raised now, f < f")
                         div++
                     }
                     fHistoryLow = factor
