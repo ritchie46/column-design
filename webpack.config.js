@@ -27,4 +27,22 @@ var config = {
     }
 };
 
-module.exports = config;
+var speedtest = {
+    entry: APP_DIR + '/speedtest/index.js',
+    output: {
+        path: BUILD_DIR + "/speedtest",
+        filename: 'bundle.js'
+    },
+    module : {
+
+        loaders: [
+            {
+                test: /\.jsx?/,
+                include: APP_DIR,
+                loader: "babel-loader",
+            }
+        ]
+    }
+};
+
+module.exports = [config, speedtest];

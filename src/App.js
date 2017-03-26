@@ -42,17 +42,22 @@ class App extends Component {
 
         i.concrete = 30;
         let worker = new workerModule();
-
-        worker.postMessage(i);
+        let t0 = performance.now()
+        // worker.postMessage(i);
+        //
+        // // Event handler when worker has finished.
+        // worker.onmessage = function (e) {
+        //     let t1 = performance.now()
+        //     console.log("time", t1 -t0)
+        //     console.log("output", e.data)
+        // };
 
         // wrap in an async function so that rendering of the loader will be rendered first.
-        let compute = function (i) {
-            let c = i.concrete
+        let compute = async(function (i) {
             let calc = new ColumnNENEN(i.M1 * 1e6, i.M2 * 1e6, i.Ned * 1e3 * i.UC, i.concrete, i.rho / 1e2, i.l0 * 1e3);
             calc.solve();
-
-            result.push(<th>{c}</th>);
-            console.log("result", result)
+            let t1 = performance.now()
+            console.log("time", t1 -t0)
 
             console.log(calc.validity);
             if (calc.validity) {
@@ -64,7 +69,6 @@ class App extends Component {
                                 <th></th>
                                 <th>Units</th>
                                 <th>C30/37</th>
-                                {result}
                             </tr>
                             <tr>
                                 <td>Dimensions</td>
@@ -93,20 +97,10 @@ class App extends Component {
                 ReactDOM.render(<App output={output}/>, document.getElementById('root'))
             }
 
-        }
-        //
-        // let concrete = [20, 30, 40];
-        // let result = []
-        //
-        // ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
-        //
-        // for (let j = 0; j < 2; j++) {
-        //     console.log("in loop")
-        //     i.concrete = concrete[j];
-        //     window.
-        //     compute(i)
-        //
-        // }
+        })
+        compute(i)
+        //ReactDOM.render(<Loader callback={compute} args={i} />, document.getElementById("root"));
+
 
 }
 
@@ -153,11 +147,11 @@ class Loader extends React.Component {
     }
 }
 
-// Loader.prototype.componentWillMount = function () {
-//     return (
-//         this.callback(this.arguments)
-//     )
-// };
+Loader.prototype.componentWillMount = function () {
+    return (
+        this.callback(this.arguments)
+    )
+};
 
 
 function async(func) {
