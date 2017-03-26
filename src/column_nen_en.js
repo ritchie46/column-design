@@ -128,7 +128,11 @@ export default class ColumnNENEN {
             console.log("Axial force dimensions not sufficient");
             c = 0;
 
+            let fHistoryHigh = 1e12;
+            let fHistoryLow = -1e12;
+
             while(true) {
+                let div = 2;
                 this.i = b / 3.46;
                 area = Math.pow(b, 2);
                 as = this.rho * area / 2;
@@ -141,22 +145,15 @@ export default class ColumnNENEN {
                 let M2 = this.det_params(area).M2;
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
-                let factor = vanilla.std.convergence(m.moment, M0EdM2, 5);
+                let factor = vanilla.std.convergence(m.moment, M0EdM2, div);
                 //console.log("factor: ", factor);
                 b *= factor;
-
-                // if (this.axialForceResistance(area) < -this.ned) {
-                //     console.log(vanilla.std.convergence(this.axialForceResistance(area), -this.ned), this.axialForceResistance(area)/1e3);
-                //     console.log("minimal axial force dimension");
-                //     break
-                // }
 
                 if (vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
                     assign();
                     break
                 }
-
 
                 //console.log(M0EdM2, m.moment, m.validity(), b);
 
@@ -171,6 +168,23 @@ export default class ColumnNENEN {
                     this.validity = false;
                     console.log("max iter");
                     break
+                }
+
+                // Adaptive convergence divider
+                // Change the division based on the factor history
+                if (factor > 1) {
+                    if (factor > fHistoryHigh) {
+                        div++
+                    }
+                    else {
+                        fHistoryHigh = factor
+                    }
+                }
+                else if (factor < fHistoryLow) {
+                    div++
+                }
+                else {
+                    fHistoryLow = factor
                 }
             }
         }

@@ -105,8 +105,7 @@ export default class ColumnNENEN {
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
                 calcHookup(0.05, m);
                 m.det_m_kappa();
-                console.log("Axial force convergence", "count", c, "Nrd", Math.round(nrd / 1e3), "Mrd",
-                Math.round(m.moment / 1e6), "width", Math.round(b));
+                console.log("Axial force convergence", "count", c);
                 assign();
                 break
             }
@@ -126,9 +125,12 @@ export default class ColumnNENEN {
             console.log("Minimal axial force is sufficient")
         }
         else {
-            console.log("Axial force dimensions not sufficient", "M0EdM2", Math.round(M0EdM2 / 1e6));
-
+            console.log("Axial force dimensions not sufficient");
             c = 0;
+
+            let fHistoryHigh = 1e12;
+            let fHistoryLow = -1e12;
+            let div = 5;
 
             while(true) {
                 this.i = b / 3.46;
@@ -143,22 +145,18 @@ export default class ColumnNENEN {
                 let M2 = this.det_params(area).M2;
                 let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
 
-                let factor = vanilla.std.convergence(m.moment, M0EdM2, 5);
-                console.log("factor: ", factor);
+                let factor = vanilla.std.convergence(m.moment, M0EdM2, div);
+                console.log("factor: ", factor, "div", div, "count", c);
                 b *= factor;
 
-                // if (this.axialForceResistance(area) < -this.ned) {
-                //     console.log(vanilla.std.convergence(this.axialForceResistance(area), -this.ned), this.axialForceResistance(area)/1e3);
-                //     console.log("minimal axial force dimension");
-                //     break
-                // }
+                console.log("conditions", vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99),
+                    m.validity())
 
                 if (vanilla.std.convergence_conditions(M0EdM2, m.moment, 1.01, 0.99) && m.validity()) {
                     console.log("convergence");
                     assign();
                     break
                 }
-
 
                 //console.log(M0EdM2, m.moment, m.validity(), b);
 
@@ -169,11 +167,31 @@ export default class ColumnNENEN {
                 }
                 c++;
 
-                if (c > 250) {
+                if (c > 20) {
                     this.validity = false;
                     console.log("max iter");
                     break
                 }
+
+                // Adaptive convergence divider
+                // Change the division based on the factor history
+                if (factor > 1) {
+                    console.log("f > 1")
+                    if (factor > fHistoryHigh) {
+                        console.log("Div should be raised now, f > f")
+                        div++
+                    }
+                    fHistoryHigh = factor;
+                }
+                else {
+                    console.log("f < 1")
+                    if (factor < fHistoryLow) {
+                        console.log("Div should be raised now, f < f")
+                        div++
+                    }
+                    fHistoryLow = factor
+                }
+
             }
         }
     };
