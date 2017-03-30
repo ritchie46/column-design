@@ -4,6 +4,41 @@ body {
   font-family: sans-serif;
 }
 
+#base-input {
+    margin-left: 10em;
+    background: #CFF09E;
+    width: 30rem;
+}
+
+.input-container {
+    text-align: left;
+    display: block;
+}
+
+label {
+    width: 50%;
+    display: inline-block;
+}
+
+input {
+    padding: 0.2em 0.2em 0.2em 0.2em;
+    box-sizing: border-box;
+    margin: 0.2em 0.2em 0.2em 0.2em;
+    width: 12rem;
+}
+
+.input-style-1 {
+    padding: 10px;
+    border: None;
+    border-bottom: solid 2px #c9c9c9;
+    transition: border 0.3s;
+}
+
+.input-style-1:focus,
+.input-style-1.focus {
+    border-bottom: solid 2px #969696;
+}
+
 /*grid system*/
 .col-1 {width: 8.33%;}
 .col-2 {width: 16.66%;}

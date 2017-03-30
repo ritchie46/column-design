@@ -15,16 +15,16 @@ class App extends Component {
             <div className="App-header">
               <h2>Column design</h2>
             </div>
-            <div>
+            <form id="base-input">
               <Input label="Axial force: " value={Math.abs(this.values.Ned)} unit="kN" name="Ned" function={this.setHandler}/>
               <Input label="Bending moment top: " value={this.values.M1} unit="kNm" name="M1" function={this.setHandler}/>
               <Input label="Bending moment bottom: " value={this.values.M2} unit="kNm" name="M2" function={this.setHandler}/>
-              <Input label="Buckling length :" unit="m" value={this.values.l0} name="l0" function={this.setHandler}/>
+              <Input label="Buckling length:" unit="m" value={this.values.l0} name="l0" function={this.setHandler}/>
               <Input label="Reinforcement percentage: " value={this.values.rho} unit="%" name="rho" function={this.setHandler}/>
               <Input label="Unity check: " value={this.values.UC}  name="UC" function={this.setHandler}/>
               <Button label="Go!" function={this.executeColumn} args={this.values}/>
               {this.props.output}
-            </div>
+            </form>
             </div>
     )
     }
@@ -46,7 +46,6 @@ class App extends Component {
         worker.onmessage = function (e) {
             let t1 = performance.now();
             console.log("time", t1 -t0);
-            console.log("output", e.data);
 
             let output = <div>
                 <h2>Output</h2>
@@ -97,12 +96,12 @@ function Input(props) {
     let type = props.type || "number";
 
     return (
-        <div>
+        <div className="input-container">
             <label>
                 {props.label}
-                <input type={type} name={props.name} defaultValue={props.value} onChange={props.function}/>
-                <span>{props.unit}</span>
             </label>
+                <input className="input-style-1" type={type} name={props.name} defaultValue={props.value} onChange={props.function}/>
+                <span>{props.unit}</span>
         </div>
     )
 }
