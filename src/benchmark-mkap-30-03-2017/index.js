@@ -3,21 +3,20 @@ let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 let t0 = performance.now();
 let worker = new workerModule();
 let data = {
-    M1: 2,
+    M1: 75,
     M2: 2,
     Ned: -9000,
     UC: 1,
     concrete: 20,
     rho: 2,
-    l0: 5
+    l0: 3
 };
 
 for (let i = 1; i < 10; i++) {
     data.Ned = -i * 1000;
-    data.rho = 1 + i % 3;
-    data.M1 = (i + 3 % 4) * 10;
     worker.postMessage(data);
 }
+
 
 // Event handler when worker has finished.
 worker.onmessage = function (e) {

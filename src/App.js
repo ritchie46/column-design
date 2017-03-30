@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
-import ColumnNENEN from "./column_nen_en.js"
 let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 
 class App extends Component {
     constructor(props) {
         super(props);
-        this.values = this.props.values  // more will be appended in setHandler()
+        this.values = this.props.values; // more will be appended in setHandler()
     }
 
     render() {

@@ -41,7 +41,7 @@ function m_n_kappa(cs, fc, fct, fs, as, z, ned) {
 
 
 function diagramConcreteBiLinearULS(stress) {
-    return new vanilla.mkap.StressStrain([0, 1.75, 3.5], [0, stress, stress])
+    return new vanilla.mkap.StressStrain([0, 1.75, 2], [0, stress, stress])
 }
 
 const diagramNoConcreteTension = new vanilla.mkap.StressStrain([0, 0], [0, 0]);

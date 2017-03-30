@@ -27,10 +27,10 @@ var config = {
     }
 };
 
-var speedtest_es6 = {
-    entry: APP_DIR + '/speedtest-es6/index.js',
+var benchmark_1= {
+    entry: APP_DIR + '/benchmark-mkap-20-03-2017/index.js',
     output: {
-        path: BUILD_DIR + "/speedtest-es6",
+        path: BUILD_DIR + "/benchmark-mkap-20-03-2017",
         filename: 'bundle.js'
     },
     module : {
@@ -45,10 +45,10 @@ var speedtest_es6 = {
     }
 };
 
-var speedtest_es5 = {
-    entry: APP_DIR + '/speedtest-es5/index.js',
+var benchmark_2= {
+    entry: APP_DIR + '/benchmark-mkap-30-03-2017/index.js',
     output: {
-        path: BUILD_DIR + "/speedtest-es5",
+        path: BUILD_DIR + "/benchmark-mkap-30-03-2017",
         filename: 'bundle.js'
     },
     module : {
@@ -64,4 +64,4 @@ var speedtest_es5 = {
 };
 
 
-module.exports = [config, speedtest_es6, speedtest_es5];
+module.exports = [config, benchmark_1, benchmark_2];
