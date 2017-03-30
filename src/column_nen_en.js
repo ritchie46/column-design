@@ -200,7 +200,7 @@ export default class ColumnNENEN {
                     break
                 }
 
-                if (vanilla.std.convergence_conditions(Math.abs(m.moment), M0EdM2, 1.1, 1) && m.validity() ||
+                if (vanilla.std.convergence_conditions(Math.abs(m.moment), M0EdM2, 0.99, 0.95) && m.validity() ||
                     vanilla.std.convergence_conditions(nrd, -this.ned, 0.99, 0.95) && Math.abs(m.moment) > M0EdM2) {
                     console.log("Moment convergence", "count", c);
                     assign();
