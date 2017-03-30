@@ -86,6 +86,7 @@ export default class ColumnNENEN {
         let m;
         let as;
         let nrd;
+        let M0EdM2;
 
         let assign = () => {
             this.validity = true;
@@ -108,7 +109,7 @@ export default class ColumnNENEN {
                 as = this.rho * area / 2;
                 let cs = rectangle(b, b);
                 m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
-                let sol = calcHookup(0.05, m);
+                calcHookup(0.05, m);
 
                 // m.det_m_kappa();
                 console.log("Axial force convergence", "count", c, "width", b);
@@ -142,7 +143,7 @@ export default class ColumnNENEN {
         // Validate if the the minimum required cross section for the axial force is able to bear the total moment.
         this.i = b / 3.46;
         let M2 = this.det_params(area).M2;
-        let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
+        M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
         if (m.moment > M0EdM2) {  // The cross section is sufficient.
             console.log("Minimal axial force is sufficient");
             assign();
@@ -167,7 +168,7 @@ export default class ColumnNENEN {
                 // m.det_m_kappa();
 
                 let M2 = this.det_params(area).M2;
-                let M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
+                M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
                 let factorMoment = vanilla.std.convergence(Math.abs(m.moment), M0EdM2, div);
 
                 // axial force validation
@@ -199,7 +200,7 @@ export default class ColumnNENEN {
                     break
                 }
 
-                if (vanilla.std.convergence_conditions(Math.abs(m.moment), M0EdM2, 1.02, 0.90) && m.validity() ||
+                if (vanilla.std.convergence_conditions(Math.abs(m.moment), M0EdM2, 1.1, 1) && m.validity() ||
                     vanilla.std.convergence_conditions(nrd, -this.ned, 0.99, 0.95) && Math.abs(m.moment) > M0EdM2) {
                     console.log("Moment convergence", "count", c);
                     assign();
@@ -208,7 +209,6 @@ export default class ColumnNENEN {
 
                 let dm = Math.abs(m.moment) - M0EdM2;
                 if (dm > 0 && dm < 25e6) {
-                    console.log("Moment dm < 25 kNm", "count", c);
                     assign();
                     break
                 }
