@@ -1,24 +1,36 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
+import {settingsContainer} from "./settings-view.js"
 let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 
-const header = <div className="App-header">
-    <h2>Column design</h2>
-    <div className="header-tab">
-        <Tab function={tab_app} label="App"/>
-        <Tab function={null} label="Settings"/>
-    </div>
-</div>;
-
-function Tab(props) {
+function Header(props) {
     return (
-        <button onClick={props.function}>{props.label}</button>
+    <div className="App-header">
+        <h2>Column design</h2>
+        <div className="header-tab">
+            <Tab function={tab_app} args={props.computeValues} label="App"/>
+            <Tab function={tab_settings} args={props.computeValues} label="Settings"/>
+        </div>
+    </div>
     )
 }
 
-function tab_app() {
-    ReactDOM.render(<App />, document.getElementById("root"))
+function Tab(props) {
+    return (
+        <button onClick={() => props.function(props.args)}>{props.label}</button>
+    )
+}
+
+function tab_app(values) {
+    ReactDOM.render(<App values={values}/>, document.getElementById("root"))
+}
+
+function tab_settings(values) {
+    ReactDOM.render(<div className="App">
+        <Header computeValues={values}/>
+        {settingsContainer}
+    </div>, document.getElementById("root"))
 }
 
 class App extends Component {
@@ -30,10 +42,10 @@ class App extends Component {
     render() {
         return (
           <div className="App">
-              {header}
+              <Header computeValues={this.values}/>
               <div className="col-5">
                   <h2>Input</h2>
-                <form id="base-input">
+                <form className="base-input">
                   <Input label="Axial force: " value={Math.abs(this.values.Ned)} unit="kN" name="Ned" function={this.setHandler}/>
                   <Input label="Bending moment top: " value={this.values.M1} unit="kNm" name="M1" function={this.setHandler}/>
                   <Input label="Bending moment bottom: " value={this.values.M2} unit="kNm" name="M2" function={this.setHandler}/>
@@ -140,7 +152,6 @@ class App extends Component {
         };
     }
 }
-
 
 
 function Input(props) {

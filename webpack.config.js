@@ -64,4 +64,5 @@ var benchmark_2= {
 };
 
 
-module.exports = [config, benchmark_1, benchmark_2];
+// module.exports = [config, benchmark_1, benchmark_2];
+module.exports = [config];
