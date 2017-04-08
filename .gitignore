@@ -15,5 +15,5 @@ build
 npm-debug.log
 ./public/bundle.js
 .idea
-**/bundle.js
-**/outputWorker.js
+**/*/bundle.js
+**/*/outputWorker.js
