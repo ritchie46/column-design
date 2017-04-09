@@ -1,8 +1,13 @@
 import React from 'react';
-
-const settingsContainer = <div className="base-input">
-
-</div>;
+import {Input, Button, Loader} from "./components"
 
 
-export {settingsContainer}
+function SettingsContainer(props) {
+    return (
+        <div className="base-input">
+            <Input label={<span>Φ<sub>eff (art. 5.8.4)</sub></span>} value="2.5" function/>
+        </div>
+    )
+}
+
+export {SettingsContainer}

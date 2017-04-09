@@ -1,37 +1,10 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
-import {settingsContainer} from "./settings-view.js"
+import {SettingsContainer} from "./settings-view"
+import {Input, Button, Loader, Header} from "./components"
 let workerModule = require("worker-loader?name=outputWorker.js!./worker.js");
 
-function Header(props) {
-    return (
-    <div className="App-header">
-        <h2>Column design</h2>
-        <div className="header-tab">
-            <Tab function={tab_app} args={props.computeValues} label="App"/>
-            <Tab function={tab_settings} args={props.computeValues} label="Settings"/>
-        </div>
-    </div>
-    )
-}
-
-function Tab(props) {
-    return (
-        <button onClick={() => props.function(props.args)}>{props.label}</button>
-    )
-}
-
-function tab_app(values) {
-    ReactDOM.render(<App values={values}/>, document.getElementById("root"))
-}
-
-function tab_settings(values) {
-    ReactDOM.render(<div className="App">
-        <Header computeValues={values}/>
-        {settingsContainer}
-    </div>, document.getElementById("root"))
-}
 
 class App extends Component {
     constructor(props) {
@@ -42,7 +15,7 @@ class App extends Component {
     render() {
         return (
           <div className="App">
-              <Header computeValues={this.values}/>
+              <Header functionTab1={this.TabApp} functionTab2={this.TabSettings}/>
               <div className="col-5">
                   <h2>Input</h2>
                 <form className="base-input">
@@ -66,6 +39,20 @@ class App extends Component {
     setHandler = (e) => {
         this.values[e.target.name] = parseFloat(e.target.value);
     };
+
+    TabApp = () => {
+        ReactDOM.render(this.render(), document.getElementById("root"))
+    };
+
+    TabSettings = () => {
+        ReactDOM.render(
+            <div className="App">
+                <Header functionTab1={this.TabApp} functionTab2={this.TabSettings}/>
+                {<SettingsContainer/>}
+            </div>, document.getElementById("root")
+        )
+    };
+
 
     // Use arrow functions because this will remain on class level.
     executeColumn = (i) => {
@@ -150,43 +137,12 @@ class App extends Component {
                 ReactDOM.render(<App output={output} values={i}/>, document.getElementById("root"))
             }
         };
-    }
+    };
 }
 
 
-function Input(props) {
-    let type = props.type || "text";
-
-    return (
-        <div className="input-container">
-            <label>
-                {props.label}
-            </label>
-                <input className="input-style-1" type={type} name={props.name} defaultValue={props.value} onChange={props.function}/>
-                <span>{props.unit}</span>
-        </div>
-    )
-}
 
 
-class Button extends React.Component {
-    render() {
-        return (
-            <div>
-                <button type="button" onClick={() => this.props.function(this.props.args)}>{this.props.label} </button>
-            </div>
-        )
-    }
-}
-
-function Loader(props) {
-    return (
-        <div className="loader-header">
-            <h2>{props.header}</h2>
-            <div className="loader"/>
-        </div>
-    )
-}
 
 
 
