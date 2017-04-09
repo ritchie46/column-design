@@ -26,7 +26,8 @@ function Input(props) {
             <label>
                 {props.label}
             </label>
-            <input className="input-style-1" type={type} name={props.name} defaultValue={props.value} onChange={props.function}/>
+            <input className="input-style-1" type={type} name={props.name} defaultValue={props.value}
+                   onChange={props.function}/>
             <span>{props.unit}</span>
         </div>
     )

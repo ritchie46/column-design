@@ -37,6 +37,7 @@ class App extends Component {
     }
 
     setHandler = (e) => {
+        console.log(this.values);
         this.values[e.target.name] = parseFloat(e.target.value);
     };
 
@@ -48,7 +49,7 @@ class App extends Component {
         ReactDOM.render(
             <div className="App">
                 <Header functionTab1={this.TabApp} functionTab2={this.TabSettings}/>
-                {<SettingsContainer/>}
+                {<SettingsContainer function={this.setHandler} values={this.values}/>}
             </div>, document.getElementById("root")
         )
     };
