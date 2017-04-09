@@ -28,7 +28,7 @@ export default class ColumnNENEN {
      *  %
      *
      */
-    constructor(m1, m2, ned, fck, rho, l0) {
+    constructor(m1, m2, ned, fck, rho, l0, phi_eff) {
         this.m1 = m1;
         this.m2 = m2;
         this.ned = ned;
@@ -36,6 +36,7 @@ export default class ColumnNENEN {
         this.rho = rho;
         this.l0 = l0;
         this.m0ed = detM0e(m1, m2);
+        this.phi_eff = phi_eff;
 
         this.i = 0; // needs to be determined before det params
 
@@ -62,8 +63,7 @@ export default class ColumnNENEN {
         // K_phi
         let lambda = this.l0 / this.i;
         let beta = 0.35 + this.fck / 200 - lambda / 150;
-        let phi_eff = 2.5;
-        let k_phi = 1 + beta * phi_eff;
+        let k_phi = 1 + beta * this.phi_eff;
 
         let d = 0.8 * Math.sqrt(area); // only with squares.
         let _1_div_r0 = eps_yd / (0.45 * d);
