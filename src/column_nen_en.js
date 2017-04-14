@@ -37,6 +37,8 @@ export default class ColumnNENEN {
         this.l0 = l0;
         this.m0ed = detM0e(m1, m2);
         this.phi_eff = phi_eff;
+        this.a = 0.2; // distance factor from outer column to center rebar. a * h
+        this.bh = 1;
 
         this.i = 0; // needs to be determined before det params
 
@@ -103,16 +105,17 @@ export default class ColumnNENEN {
         let bMin;
         // Iterate the minimum required dimension for the axial force.
         while(true) {
-            area = Math.pow(b, 2);
+            let h = b / this.bh;
+            area = b * h;
             nrd = this.axialForceResistance(area);
             if (    vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.975)) {
                 as = this.rho * area / 2;
-                let cs = rectangle(b, b);
-                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
+                let cs = rectangle(b, h);
+                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [this.a * h, (1 - this.a) * h] , this.ned);
                 calcHookup(0.05, m);
 
                 // m.det_m_kappa();
-                console.log("Axial force convergence", "count", c, "width", b);
+                //console.log("Axial force convergence", "count", c, "width", b);
                 bMin = b;
                 break
             }
@@ -163,7 +166,7 @@ export default class ColumnNENEN {
                 let cs = rectangle(b, b);
 
                 // moment validation
-                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [0.2 * b, 0.8 * b] , this.ned);
+                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [this.a * b, (1 - this.a) * b] , this.ned);
                 let sol = calcHookup(0.05, m);
                 // m.det_m_kappa();
 
@@ -181,10 +184,8 @@ export default class ColumnNENEN {
                     b *= factorMoment
                 }
 
-                console.log(sol);
-
-                console.log("factor_axial: ", factorAxial,"factor_moment: ", factorMoment, "div", div, "count", c, "width", b, "M0MEd2", Math.round(M0EdM2/1e6),
-                    "moment", Math.round(m.moment/1e6), sol.strain, "solver", sol.solver);
+                //console.log("factor_axial: ", factorAxial,"factor_moment: ", factorMoment, "div", div, "count", c, "width", b, "M0MEd2", Math.round(M0EdM2/1e6),
+                //    "moment", Math.round(m.moment/1e6), sol.strain, "solver", sol.solver);
 
                 if (!isFinite(b)) {
                     this.validity = false;
@@ -208,7 +209,8 @@ export default class ColumnNENEN {
                 }
 
                 let dm = Math.abs(m.moment) - M0EdM2;
-                if (dm > 0 && dm < 25e6) {
+                if (dm > 0 && dm < 0.25e6) {
+                    console.log("Absolute value convergence");
                     assign();
                     break
                 }
