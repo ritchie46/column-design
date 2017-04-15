@@ -10,6 +10,6 @@ onmessage = function (e) {
     calc.bh = e.data.bh_ratio;
     calc.solve();
 
-    postMessage({width: calc.width, As: calc.As, mrd: calc.mrd, nrd: calc.nrd, M0EdM2: calc.M0EdM2})
+    postMessage({width: calc.width, height: calc.height, As: calc.As, mrd: calc.mrd, nrd: calc.nrd, M0EdM2: calc.M0EdM2})
 
 };

@@ -48,7 +48,7 @@ export default class ColumnNENEN {
         this.As = null
     }
 
-    det_params(area) {
+    det_params(area, h) {
         /*
          * Determine the NEN-EN parameters. All the parameters are required to determine M2. These are assigned for
          * readability.
@@ -65,9 +65,9 @@ export default class ColumnNENEN {
         // K_phi
         let lambda = this.l0 / this.i;
         let beta = 0.35 + this.fck / 200 - lambda / 150;
-        let k_phi = 1 + beta * this.phi_eff;
+        let k_phi = 1 + beta * this.phi_eff > 1 ? 1 + beta * this.phi_eff : 1;
 
-        let d = 0.8 * Math.sqrt(area); // only with squares.
+        let d = h - (this.a * h);
         let _1_div_r0 = eps_yd / (0.45 * d);
         let _1_div_r = kr * k_phi * _1_div_r0;
         let e2 = _1_div_r * Math.pow(this.l0, 2) / Math.pow(Math.PI, 2);
@@ -89,10 +89,12 @@ export default class ColumnNENEN {
         let as;
         let nrd;
         let M0EdM2;
+        let h = null;
 
         let assign = () => {
             this.validity = true;
             this.width = b;
+            this.height = h;
             this.As = as;
             this.mrd = m.moment;
             this.nrd = nrd;
@@ -105,7 +107,7 @@ export default class ColumnNENEN {
         let bMin;
         // Iterate the minimum required dimension for the axial force.
         while(true) {
-            let h = b / this.bh;
+            h = b / this.bh;
             area = b * h;
             nrd = this.axialForceResistance(area);
             if (    vanilla.std.convergence_conditions(nrd, -this.ned, 1.01, 0.975)) {
@@ -144,8 +146,8 @@ export default class ColumnNENEN {
         }
 
         // Validate if the the minimum required cross section for the axial force is able to bear the total moment.
-        this.i = b / 3.46;
-        let M2 = this.det_params(area).M2;
+        this.i = h / 3.46;
+        let M2 = this.det_params(area, h).M2;
         M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
         if (m.moment > M0EdM2) {  // The cross section is sufficient.
             console.log("Minimal axial force is sufficient");
@@ -160,17 +162,18 @@ export default class ColumnNENEN {
             let div = 5;
 
             while(true) {
-                this.i = b / 3.46;
-                area = Math.pow(b, 2);
+                h = b / this.bh;
+                area = b * h;
+                this.i = h / 3.46;
                 as = this.rho * area / 2;
-                let cs = rectangle(b, b);
+                let cs = rectangle(b, h);
 
                 // moment validation
-                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [this.a * b, (1 - this.a) * b] , this.ned);
+                m = m_n_kappa(cs, fc, diagramNoConcreteTension, B500, [as, as], [this.a * h, (1 - this.a) * h] , this.ned);
                 let sol = calcHookup(0.05, m);
                 // m.det_m_kappa();
 
-                let M2 = this.det_params(area).M2;
+                let M2 = this.det_params(area, h).M2;
                 M0EdM2 = Math.max(this.m0ed + M2, this.m2, this.m1 + 0.5 * M2);
                 let factorMoment = vanilla.std.convergence(Math.abs(m.moment), M0EdM2, div);
 

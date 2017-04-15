@@ -84,7 +84,7 @@ class App extends Component {
         // Event handler when worker has finished.
         worker.onmessage = function (e) {
             count ++;
-            width.push(<td>{Math.round(e.data.width)} x {Math.round(e.data.width)}</td>);
+            width.push(<td>{Math.round(e.data.width)} x {Math.round(e.data.height)}</td>);
             as.push(<td>{Math.round(e.data.As)}</td>);
             mrd.push(<td>{Math.round(e.data.mrd / 1e6)}</td>);
             nrd.push(<td>{Math.round(e.data.nrd / 1e3)}</td>);
