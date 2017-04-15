@@ -33,6 +33,14 @@ function Input(props) {
     )
 }
 
+function RadioButton(props) {
+    let {...destruct} = props;
+    destruct.type = "radio";
+    return (
+        Input(destruct)
+    )
+}
+
 class Button extends React.Component {
     render() {
         return (
@@ -53,4 +61,4 @@ function Loader(props) {
 }
 
 
-export {Input, Button, Loader, Tab, Header}
+export {Input, Button, Loader, Tab, Header, RadioButton}
